@@ -4,5 +4,9 @@ Repositório para o desenvolvimento do projeto de Megaman do Grupo 3 na discipli
 | Nome | Matrícula |
 |----|------------|
 |Ailton Aires Amado | 180011600 |
+| André Lucas | 150005563 |
+| Daniel Primo | 180063162 |
 | Igor Aragão | 150011903|
 | Wagner M Cunha | 180029177 |
+
+
