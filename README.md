@@ -28,6 +28,7 @@ Abaixo a última versão do diagrama do Modelo Entidade Relacionamento (v1.0). T
 ## Entrega Módulo 2 - Modelo Relacional (MR)
 
 Abaixo a última versão do diagrama do Modelo Relacional (v1.0). Todas as versões podem ser encontradas na pasta [Modelo Relacional](./Modelo_Relacional).
+O Modelo Entidade Relacionamento também foi atualizado, e esta entrega usa como base o [MER Versão 1.2](./MER/MER_megaman_mud_v1.2.jpg).
 
 <p align="center">
     <img src="Modelo_Relacional/Modelo_Relacional_v1.0.png">
