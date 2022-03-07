@@ -33,3 +33,11 @@ O Modelo Entidade Relacionamento também foi atualizado, e esta entrega usa como
 <p align="center">
     <img src="Modelo_Relacional/Modelo_Relacional_v1.0.png">
 </p>
+
+## Entrega Módulo 3 - Normalização
+
+Abaixo a última versão do documento de Normalização (v1.0). As outras versões podem ser encontradas na pasta [Normalizacao](./Normalizacao).
+
+<p align="center">
+    <img src="Normalizacao/normalizacao_v1.0.jpg">
+</p>
