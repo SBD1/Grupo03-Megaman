@@ -109,5 +109,16 @@ CREATE TABLE arma (
 		
 );
 
-
+CREATE TABLE consumivel (
+	id SERIAL CONSTRAINT armadura_pk PRIMARY KEY,
+	nome VARCHAR(50) NOT NULL,
+	descricao VARCHAR(200),
+	valor_compra SMALLINT,
+	valor_venda SMALLINT,
+	modificador_dano SMALLINT,
+	modificador_energia SMALLINT,
+	
+	CHECK  ((valor_compra > 0 ) AND (valor_venda > 0))
+		
+);
 
