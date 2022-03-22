@@ -74,3 +74,40 @@ CREATE TABLE habilidade (
 	
 	CONSTRAINT habilidade_pk PRIMARY KEY (codigo)
 );
+
+CREATE TABLE armadura (
+	id SERIAL CONSTRAINT armadura_pk PRIMARY KEY,
+	nome VARCHAR(50) NOT NULL,
+	tipo VARCHAR(50) NOT NULL,
+	descricao VARCHAR(200),
+	valor_compra SMALLINT,
+	valor_venda SMALLINT,
+	valor_upgrade SMALLINT,
+	nivel SMALLINT,
+	energia SMALLINT,
+	ataque SMALLINT,
+	defesa SMALLINT,
+	
+	CHECK  ((valor_compra > 0 ) AND (valor_venda > 0) AND (valor_upgrade > 0) AND (nivel > 0))
+		
+);
+
+CREATE TABLE arma (
+	id SERIAL CONSTRAINT armadura_pk PRIMARY KEY,
+	nome VARCHAR(50) NOT NULL,
+	tipo VARCHAR(50) NOT NULL,
+	descricao VARCHAR(200),
+	valor_compra SMALLINT,
+	valor_venda SMALLINT,
+	valor_upgrade SMALLINT,
+	nivel SMALLINT,
+	energia SMALLINT,
+	ataque SMALLINT,
+	agilidade SMALLINT,
+	
+	CHECK  ((valor_compra > 0 ) AND (valor_venda > 0) AND (valor_upgrade > 0) AND (nivel > 0))
+		
+);
+
+
+
