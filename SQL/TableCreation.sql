@@ -122,3 +122,50 @@ CREATE TABLE consumivel (
 		
 );
 
+
+CREATE TABLE venda (
+
+	id_loja INTEGER CONSTRAINT id_loja_fk REFERENCES loja (codigo),
+	id_item INTEGER CONSTRAINT id_item_fk REFERENCES item (id),
+
+	CONSTRAINT venda_pk PRIMARY KEY (id_loja, id_item)
+	
+);
+
+CREATE TABLE altera (
+
+	chave INTEGER CONSTRAINT chave_fk REFERENCES chave (id),
+	posX INTEGER CONSTRAINT posX_fk REFERENCES quadrado (pos_x),
+	posY INTEGER CONSTRAINT posY_fk REFERENCES quadrado (pox_y),
+	area INTEGER CONSTRAINT area_fk REFERENCES area (mapa, nome),
+	mapa INTEGER CONSTRAINT mapa_fk REFERENCES mapa (nome),
+
+
+	CONSTRAINT altera_pk PRIMARY KEY (chave, posX, posY, area, mapa)
+	
+);
+
+CREATE TABLE destranca (
+
+	chave INTEGER CONSTRAINT chave_fk REFERENCES chave (id),
+	posX INTEGER CONSTRAINT posX_fk REFERENCES quadrado (pos_x),
+	posY INTEGER CONSTRAINT posY_fk REFERENCES quadrado (pox_y),
+	area INTEGER CONSTRAINT area_fk REFERENCES area (mapa, nome),
+	mapa INTEGER CONSTRAINT mapa_fk REFERENCES mapa (nome),
+
+
+	CONSTRAINT destranca_pk PRIMARY KEY (chave, posX, posY, area, mapa)
+	
+);
+
+CREATE TABLE usa (
+
+	id_chave INTEGER CONSTRAINT id_loja_fk REFERENCES chave (codigo),
+	id_player INTEGER CONSTRAINT id_item_fk REFERENCES player (id),
+
+	CONSTRAINT venda_pk PRIMARY KEY (id_loja, id_item)
+	
+	--Serve para consultar se um player pode alterar o estado
+	-- da porta e salvar no histórico destranca
+);
+
