@@ -326,3 +326,14 @@ CREATE TABLE conecta (
 	CONSTRAINT quadrado2_fk FOREIGN KEY (pos_x2, pos_y2, area2, mapa2)
 		REFERENCES quadrado (pos_x, pos_y, area, mapa)
 );
+
+CREATE TABLE drop (
+	item BIGINT,
+	evento BIGINT,
+	chance INTEGER,
+	
+	CONSTRAINT slot_pk PRIMARY KEY (item, evento),
+	CONSTRAINT slot_inventario_fk FOREIGN KEY (evento) 
+	CONSTRAINT slot_item_fk FOREIGN KEY (item)
+		REFERENCES item (id)
+);
