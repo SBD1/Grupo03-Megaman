@@ -92,7 +92,7 @@ CREATE TABLE armadura (
 		
 );
 
-CREATE TABLE arma (
+CREATE TABLE arma ( 
 	id SERIAL CONSTRAINT armadura_pk PRIMARY KEY,
 	nome VARCHAR(50) NOT NULL,
 	tipo VARCHAR(50) NOT NULL,
