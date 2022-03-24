@@ -332,10 +332,25 @@ CREATE TABLE drop (
 	evento BIGINT,
 	chance INTEGER,
 	
-	CONSTRAINT slot_pk PRIMARY KEY (item, evento),
-	CONSTRAINT slot_inventario_fk FOREIGN KEY (evento) 
-	CONSTRAINT slot_item_fk FOREIGN KEY (item)
+	CONSTRAINT drop_pk PRIMARY KEY (item, evento),
+	CONSTRAINT drop_evento_fk FOREIGN KEY (evento) 
+	CONSTRAINT drop_item_fk FOREIGN KEY (item)
 		REFERENCES item (id)
-	CONSTRAINT slot_item_fk FOREIGN KEY (evento)
+	CONSTRAINT drop_evento_fk FOREIGN KEY (evento)
 		REFERENCES evento (codigo)
 );
+
+CREATE TABLE melhoria (
+	loja SERIAL,
+	equipamento BIGINT,
+	
+	CONSTRAINT melhoria_pk PRIMARY KEY (loja, equipamento),
+	CONSTRAINT melhoria_loja_fk FOREIGN KEY (loja) 
+	CONSTRAINT melhoria_equipamento_fk FOREIGN KEY (equipamento) 
+	CONSTRAINT melhoria_loja_fk FOREIGN KEY (loja)
+		REFERENCES loja (codigo)
+	CONSTRAINT melhoria_equipamento_fk FOREIGN KEY (evento)
+		REFERENCES equipamento (equipamento)
+);
+
+
