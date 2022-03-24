@@ -336,4 +336,6 @@ CREATE TABLE drop (
 	CONSTRAINT slot_inventario_fk FOREIGN KEY (evento) 
 	CONSTRAINT slot_item_fk FOREIGN KEY (item)
 		REFERENCES item (id)
+	CONSTRAINT slot_item_fk FOREIGN KEY (evento)
+		REFERENCES evento (codigo)
 );
