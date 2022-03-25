@@ -9,12 +9,12 @@ CREATE DOMAIN CHARTYPE
 -- Para HP e Energia
 CREATE DOMAIN PRIM_STAT
 	AS SMALLINT NOT NULL
-	CHECK (VALUE >= 0 AND VALUE < 1000)
+	CHECK (VALUE >= 0 AND VALUE < 1000);
 
 -- Para ataque, defesa, evasão, etc
 CREATE DOMAIN SEC_STAT
 	AS SMALLINT NOT NULL 
-	CHECK (VALUE >= 0 AND VALUE < 301)
+	CHECK (VALUE >= 0 AND VALUE < 301);
 	
 CREATE TABLE loja (
 	codigo SERIAL,
@@ -32,13 +32,14 @@ CREATE TABLE item (
 
 CREATE TABLE inventario (
 	id SERIAL,
-	tamanho SMALLINT CHECK (VALUE > 0 AND VALUE <= 9999),
+	tamanho SMALLINT,
 	
-	CONSTRAINT inventario_pk PRIMARY KEY (id),
+	CONSTRAINT inventario_tamanho_ck CHECK (tamanho >= 0 AND tamanho <= 9999),
+	CONSTRAINT inventario_pk PRIMARY KEY (id)
 );
 
 CREATE TABLE personagem (
-	nome VARCHAR(100),
+	codigo SERIAL,
 	tipo CHARTYPE,
 	
 	CONSTRAINT personagem_pk PRIMARY KEY (codigo)
@@ -58,7 +59,7 @@ CREATE TABLE player (
 --	armadura
 	
 	CONSTRAINT player_pk PRIMARY KEY (nome),
-	CONSTRAINT player_credits_ck CHECK(VALUE >= 0, VALUE <= 99999999)
+	CONSTRAINT player_credits_ck CHECK(creditos >= 0 AND creditos <= 99999999)
 );
 
 CREATE TABLE mapa (
@@ -93,7 +94,7 @@ CREATE TABLE armadura (
 );
 
 CREATE TABLE arma ( 
-	id SERIAL CONSTRAINT armadura_pk PRIMARY KEY,
+	id SERIAL CONSTRAINT arma_pk PRIMARY KEY,
 	nome VARCHAR(50) NOT NULL,
 	tipo VARCHAR(50) NOT NULL,
 	descricao VARCHAR(200),
@@ -110,7 +111,7 @@ CREATE TABLE arma (
 );
 
 CREATE TABLE consumivel (
-	id SERIAL CONSTRAINT armadura_pk PRIMARY KEY,
+	id SERIAL CONSTRAINT consumivel_pk PRIMARY KEY,
 	nome VARCHAR(50) NOT NULL,
 	descricao VARCHAR(200),
 	valor_compra SMALLINT,
@@ -119,7 +120,6 @@ CREATE TABLE consumivel (
 	modificador_energia SMALLINT,
 	
 	CHECK  ((valor_compra > 0 ) AND (valor_venda > 0))
-		
 );
 
 
@@ -129,44 +129,30 @@ CREATE TABLE venda (
 	id_item INTEGER CONSTRAINT id_item_fk REFERENCES item (id),
 
 	CONSTRAINT venda_pk PRIMARY KEY (id_loja, id_item)
-	
 );
 
-CREATE TABLE altera (
-
-	chave INTEGER CONSTRAINT chave_fk REFERENCES chave (id),
-	posX INTEGER CONSTRAINT posX_fk REFERENCES quadrado (pos_x),
-	posY INTEGER CONSTRAINT posY_fk REFERENCES quadrado (pox_y),
-	area INTEGER CONSTRAINT area_fk REFERENCES area (mapa, nome),
-	mapa INTEGER CONSTRAINT mapa_fk REFERENCES mapa (nome),
-
-
-	CONSTRAINT altera_pk PRIMARY KEY (chave, posX, posY, area, mapa)
+CREATE TABLE area (
+	mapa VARCHAR(100),
+	nome VARCHAR(50),
+	largura SMALLINT,
+	altura SMALLINT,
 	
+	CONSTRAINT area_pk PRIMARY KEY (mapa, nome),
+	CONSTRAINT area_mapa_fk FOREIGN KEY (mapa)
+		REFERENCES mapa (nome)
 );
 
-CREATE TABLE destranca (
-
-	chave INTEGER CONSTRAINT chave_fk REFERENCES chave (id),
-	posX INTEGER CONSTRAINT posX_fk REFERENCES quadrado (pos_x),
-	posY INTEGER CONSTRAINT posY_fk REFERENCES quadrado (pox_y),
-	area INTEGER CONSTRAINT area_fk REFERENCES area (mapa, nome),
-	mapa INTEGER CONSTRAINT mapa_fk REFERENCES mapa (nome),
-
-
-	CONSTRAINT destranca_pk PRIMARY KEY (chave, posX, posY, area, mapa)
+CREATE TABLE quadrado (
+	pos_x SMALLINT,
+	pos_y SMALLINT,
+	area VARCHAR(50),
+	mapa VARCHAR(100),
+	tipo CHAR(1),
+	chance_batalha SMALLINT,
 	
-);
-
-CREATE TABLE usa (
-
-	id_chave INTEGER CONSTRAINT id_loja_fk REFERENCES chave (codigo),
-	id_player INTEGER CONSTRAINT id_item_fk REFERENCES player (id),
-
-	CONSTRAINT venda_pk PRIMARY KEY (id_loja, id_item)
-	
-	--Serve para consultar se um player pode alterar o estado
-	-- da porta e salvar no histórico destranca
+	CONSTRAINT quadrado_pk PRIMARY KEY (pos_x, pos_y, area, mapa),
+	CONSTRAINT quadrado_area_fk FOREIGN KEY (area, mapa)
+		REFERENCES area (nome, mapa)
 );
 
 CREATE TABLE chave (
@@ -176,7 +162,20 @@ CREATE TABLE chave (
 	valor_compra SMALLINT,
 	valor_venda SMALLINT,
 	
-	CHECK ( (valor_compra > 0) AND (valor_venda > 0))
+	CHECK ((valor_compra > 0) AND (valor_venda > 0)),
+	CONSTRAINT chave_pk PRIMARY KEY (id)
+);
+
+
+CREATE TABLE usa (
+
+	id_chave INTEGER CONSTRAINT id_loja_fk REFERENCES chave (id),
+	id_player VARCHAR(50) CONSTRAINT id_item_fk REFERENCES player (nome),
+
+	CONSTRAINT usa_pk PRIMARY KEY (id_chave, id_player)
+	
+	--Serve para consultar se um player pode alterar o estado
+	-- da porta e salvar no histórico destranca
 );
 
 CREATE TABLE npc (
@@ -213,30 +212,6 @@ CREATE TABLE fala (
 	CONSTRAINT fala_pk PRIMARY KEY (codigo)
 );
 
-CREATE TABLE area (
-	mapa VARCHAR(100),
-	nome VARCHAR(50),
-	largura SMALLINT,
-	altura SMALLINT,
-	
-	CONSTRAINT area_pk PRIMARY KEY (mapa, nome),
-	CONSTRAINT area_mapa_fk FOREIGN KEY (mapa)
-		REFERENCES mapa (nome)
-);
-
-CREATE TABLE quadrado (
-	pos_x SMALLINT,
-	pos_y SMALLINT,
-	area VARCHAR(50),
-	mapa VARCHAR(100),
-	tipo CHAR(1),
-	chance_batalha SMALLINT CHECK(VALUE >= 0 AND VALUE <= 100),
-	
-	CONSTRAINT quadrado_pk PRIMARY KEY (pos_x, pos_y, area, mapa),
-	CONSTRAINT quadrado_area FOREIGN KEY (area, mapa)
-		REFERENCES area (nome, mapa)
-);
-
 CREATE TABLE bestiario (
 	mapa VARCHAR(100),
 	npc VARCHAR(100),
@@ -254,7 +229,7 @@ CREATE TABLE elemento (
 
 CREATE TABLE resistencia (
 	nivel VARCHAR(6) PRIMARY KEY,
-	porcentagem SMALLINT NOT NULL CHECK(VALUE >= 0 AND VALUE < 101)
+	porcentagem SMALLINT NOT NULL CHECK(porcentagem >= 0 AND porcentagem < 101)
 );
 
 CREATE TABLE resiste (
@@ -272,8 +247,10 @@ CREATE TABLE resiste (
 );
 
 CREATE TABLE equip (
-	id BIGINT PRIMARY KEY,
-	tipo VARCHAR(10) NOT NULL CHECK (VALUE IN ('arma', 'armadura'))
+	id BIGINT,
+	tipo VARCHAR(10) NOT NULL CHECK (tipo IN ('arma', 'armadura')),
+	
+	CONSTRAINT equip_pk PRIMARY KEY (id)
 );
 
 CREATE TABLE equip_elem (
@@ -301,10 +278,10 @@ CREATE TABLE equip_skill (
 CREATE TABLE evento (
 	codigo BIGSERIAL PRIMARY KEY,
 	condicao VARCHAR(500),
-	tipo CHAR(1) NOT NULL CHECK (VALUE IN ('d', 'b')),
+	tipo CHAR(1) NOT NULL CHECK (tipo IN ('d', 'b')),
 	ev_anterior BIGINT,
 	acionamento_direto BOOLEAN NOT NULL,
-	desbloquado BIGINT DEFAULT false,
+	desbloqueado BOOLEAN DEFAULT false,
 	
 	CONSTRAINT evento_evento_fk FOREIGN KEY (ev_anterior)
 		REFERENCES evento (codigo)
@@ -333,9 +310,8 @@ CREATE TABLE drop (
 	chance INTEGER,
 	
 	CONSTRAINT drop_pk PRIMARY KEY (item, evento),
-	CONSTRAINT drop_evento_fk FOREIGN KEY (evento) 
 	CONSTRAINT drop_item_fk FOREIGN KEY (item)
-		REFERENCES item (id)
+		REFERENCES item (id),
 	CONSTRAINT drop_evento_fk FOREIGN KEY (evento)
 		REFERENCES evento (codigo)
 );
@@ -345,12 +321,10 @@ CREATE TABLE melhoria (
 	equipamento BIGINT,
 	
 	CONSTRAINT melhoria_pk PRIMARY KEY (loja, equipamento),
-	CONSTRAINT melhoria_loja_fk FOREIGN KEY (loja) 
-	CONSTRAINT melhoria_equipamento_fk FOREIGN KEY (equipamento) 
 	CONSTRAINT melhoria_loja_fk FOREIGN KEY (loja)
-		REFERENCES loja (codigo)
-	CONSTRAINT melhoria_equipamento_fk FOREIGN KEY (evento)
-		REFERENCES equipamento (equipamento)
+		REFERENCES loja (codigo),
+	CONSTRAINT melhoria_equipamento_fk FOREIGN KEY (equipamento)
+		REFERENCES equip (id)
 );
 
 
