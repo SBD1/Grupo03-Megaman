@@ -18,6 +18,10 @@ CREATE DOMAIN SEC_STAT
 	AS SMALLINT NOT NULL 
 	CHECK (VALUE >= 0 AND VALUE < 301);
 
+CREATE DOMAIN QUADRADO_TYPE
+	AS VARCHAR(10) NOT NULL
+	CHECK (VALUE IN ('item', 'barreira', 'efeito', 'evento', 'conexao', 'loja'));
+
 CREATE TABLE item (
 	id BIGSERIAL,
 	tipo ITEMTYPE,
@@ -110,7 +114,7 @@ CREATE TABLE slot (
 );
 
 CREATE TABLE personagem (
---	codigo SERIAL,
+--	id SERIAL,
 	nome VARCHAR(100),
 	tipo CHARTYPE,
 	
@@ -118,6 +122,7 @@ CREATE TABLE personagem (
 );
 
 CREATE TABLE player (
+-- Player é uma instância dinâmica de personagem
 	nome VARCHAR(100),
 	inventario INTEGER,
 	hp PRIM_STAT,
@@ -127,26 +132,36 @@ CREATE TABLE player (
 	evasao SEC_STAT,
 	agilidade SEC_STAT,
 	creditos INTEGER,
---	arma TODO
---	armadura
+	arma BIGINT,
+	armadura BIGINT,
 	
 	CONSTRAINT player_pk PRIMARY KEY (nome),
-	CONSTRAINT player_credits_ck CHECK(creditos >= 0 AND creditos <= 99999999)
+	CONSTRAINT player_credits_ck CHECK(creditos >= 0 AND creditos <= 99999999),
+	CONSTRAINT player_inventario_fk FOREIGN KEY (inventario)
+		REFERENCES inventario (id),
+	CONSTRAINT player_arma_fk FOREIGN KEY (arma)
+		REFERENCES arma (id),
+	CONSTRAINT player_armadura_fk FOREIGN KEY (armadura)
+		REFERENCES armadura (id)
 );
 
 CREATE TABLE npc (
+-- NPCs são dados estáticos de personagens
 	nome VARCHAR(100),
-	inventario INTEGER,
 	hp PRIM_STAT,
 	energia PRIM_STAT,
 	ataque SEC_STAT,
 	defesa SEC_STAT,
 	evasao SEC_STAT,
 	agilidade SEC_STAT,
---	arma
---	armadura
+	arma BIGINT,
+	armadura BIGINT,
 	
-	CONSTRAINT npc_pk PRIMARY KEY (nome)
+	CONSTRAINT npc_pk PRIMARY KEY (nome),
+	CONSTRAINT npc_arma_fk FOREIGN KEY (arma)
+		REFERENCES arma (id),
+	CONSTRAINT npc_armadura_fk FOREIGN KEY (armadura)
+		REFERENCES armadura (id)
 );
 
 CREATE TABLE mapa (
@@ -172,12 +187,48 @@ CREATE TABLE quadrado (
 	pos_y SMALLINT,
 	area VARCHAR(50),
 	mapa VARCHAR(100),
-	tipo CHAR(1),
 	chance_batalha SMALLINT CHECK(chance_batalha >= 0 AND chance_batalha <= 100),
 	
 	CONSTRAINT quadrado_pk PRIMARY KEY (pos_x, pos_y, area, mapa),
 	CONSTRAINT quadrado_area FOREIGN KEY (area, mapa)
 		REFERENCES area (nome, mapa)
+);
+
+CREATE TABLE quadrado_tipo (
+	pos_x SMALLINT,
+	pos_y SMALLINT,
+	area VARCHAR(50),
+	mapa VARCHAR(100),
+	tipo QUADRADO_TYPE,
+	
+	CONSTRAINT quadrado_tipo_pk PRIMARY KEY (pos_x, pos_y, area, mapa, tipo),
+	CONSTRAINT quadrado_tipo_fk FOREIGN KEY (pos_x, pos_y, area, mapa)
+		REFERENCES quadrado (pos_x, pos_y, area, mapa)
+);
+
+CREATE TABLE quadrado_efeito (
+	pos_x SMALLINT,
+	pos_y SMALLINT,
+	area VARCHAR(50),
+	mapa VARCHAR(100),
+	hp_mod SMALLINT NOT NULL,
+	mp_mod SMALLINT NOT NULL,
+	
+	CONSTRAINT quadrado_efeito_pk PRIMARY KEY (pos_x, pos_y, area, mapa),
+	CONSTRAINT quadrado_efeito_fk FOREIGN KEY (pos_x, pos_y, area, mapa)
+		REFERENCES quadrado (pos_x, pos_y, area, mapa)
+);
+
+CREATE TABLE quadrado_item (
+	pos_x SMALLINT,
+	pos_y SMALLINT,
+	area VARCHAR(50),
+	mapa VARCHAR(100),
+	item BIGINT,
+	
+	CONSTRAINT quadrado_item_pk PRIMARY KEY (pos_x, pos_y, area, mapa),
+	CONSTRAINT quadrado_item_fk FOREIGN KEY (pos_x, pos_y, area, mapa)
+		REFERENCES quadrado (pos_x, pos_y, area, mapa)
 );
 
 CREATE TABLE conecta (
@@ -227,8 +278,8 @@ CREATE TABLE destranca (
 
 CREATE TABLE usa (
 
-	id_chave INTEGER CONSTRAINT id_loja_fk REFERENCES chave (id),
-	id_player VARCHAR(100) CONSTRAINT id_item_fk REFERENCES player (nome),
+	id_chave INTEGER CONSTRAINT usa_id_chave_fk REFERENCES chave (id),
+	id_player VARCHAR(100) CONSTRAINT usa_id_player_fk REFERENCES player (nome),
 
 	CONSTRAINT usa_pk PRIMARY KEY (id_chave, id_player)
 	
@@ -237,27 +288,27 @@ CREATE TABLE usa (
 );
 
 CREATE TABLE habilidade (
-	codigo SERIAL,
+	id SERIAL,
 	descricao VARCHAR(400),
 	
-	CONSTRAINT habilidade_pk PRIMARY KEY (codigo)
+	CONSTRAINT habilidade_pk PRIMARY KEY (id)
 );
 
 CREATE TABLE loja (
-	codigo SERIAL,
+	id SERIAL,
 	nome VARCHAR(50) NOT NULL,
 	
-	CONSTRAINT loja_pk PRIMARY KEY (codigo)
+	CONSTRAINT loja_pk PRIMARY KEY (id)
 );
 
 CREATE TABLE estoque (
 -- Nos outros documentos, este é o relacionamento "venda"
-	id_loja INTEGER CONSTRAINT id_loja_fk REFERENCES loja (codigo),
+	id_loja INTEGER CONSTRAINT id_loja_fk REFERENCES loja (id),
 	id_item INTEGER CONSTRAINT id_item_fk REFERENCES item (id),
 
 	CONSTRAINT estoque_pk PRIMARY KEY (id_loja, id_item),
 	CONSTRAINT estoque_id_loja_fk FOREIGN KEY (id_loja)
-		REFERENCES loja (codigo),
+		REFERENCES loja (id),
 	CONSTRAINT estoque_id_item_fk FOREIGN KEY (id_item)
 		REFERENCES item (id)
 );
@@ -268,16 +319,16 @@ CREATE TABLE melhoria (
 	
 	CONSTRAINT melhoria_pk PRIMARY KEY (loja, equipamento),
 	CONSTRAINT melhoria_loja_fk FOREIGN KEY (loja)
-		REFERENCES loja (codigo),
+		REFERENCES loja (id),
 	CONSTRAINT melhoria_equipamento_fk FOREIGN KEY (equipamento)
 		REFERENCES equip (id)
 );
 
 CREATE TABLE fala (
-	codigo INTEGER,
+	id INTEGER,
 	texto VARCHAR(200),
 	
-	CONSTRAINT fala_pk PRIMARY KEY (codigo)
+	CONSTRAINT fala_pk PRIMARY KEY (id)
 );
 
 CREATE TABLE bestiario (
@@ -333,11 +384,11 @@ CREATE TABLE equip_skill (
 	CONSTRAINT equip_skill_equipamento_fk FOREIGN KEY (equipamento)
 		REFERENCES equip (id),
 	CONSTRAINT equip_skill_habilidade_fk FOREIGN KEY (habilidade)
-		REFERENCES habilidade (codigo)
+		REFERENCES habilidade (id)
 );
 
 CREATE TABLE evento (
-	codigo BIGSERIAL PRIMARY KEY,
+	id BIGSERIAL PRIMARY KEY,
 	condicao VARCHAR(500),
 	tipo CHAR(1) NOT NULL CHECK (tipo IN ('d', 'b')),
 	ev_anterior BIGINT,
@@ -345,10 +396,37 @@ CREATE TABLE evento (
 	desbloqueado BOOLEAN DEFAULT false,
 	
 	CONSTRAINT evento_evento_fk FOREIGN KEY (ev_anterior)
-		REFERENCES evento (codigo)
+		REFERENCES evento (id)
+);
+
+CREATE TABLE event_chain (
+--	evento A desbloqueia evento B
+	evento_a BIGINT,
+	evento_b BIGINT,
+	
+	CONSTRAINT event_chain_pk PRIMARY KEY (evento_a, evento_b),
+	CONSTRAINT event_chain_evento_a_fk FOREIGN KEY (evento_a)
+		REFERENCES evento (id),
+	CONSTRAINT event_chain_evento_b_fk FOREIGN KEY (evento_b)
+		REFERENCES evento (id)
+);
+
+CREATE TABLE quadrado_evento (
+	pos_x SMALLINT,
+	pos_y SMALLINT,
+	area VARCHAR(50),
+	mapa VARCHAR(100),
+	evento BIGINT,
+	
+	CONSTRAINT quadrado_evento_pk PRIMARY KEY (pos_x, pos_y, area, mapa, evento),
+	CONSTRAINT quadrado_evento_quadrado_fk FOREIGN KEY (pos_x, pos_y, area, mapa)
+		REFERENCES quadrado (pos_x, pos_y, area, mapa),
+	CONSTRAINT quadrado_evento_evento_fk FOREIGN KEY (evento)
+		REFERENCES evento (id)
 );
 
 CREATE TABLE drop (
+-- 
 	item BIGINT,
 	evento BIGINT,
 	chance INTEGER,
@@ -357,7 +435,62 @@ CREATE TABLE drop (
 	CONSTRAINT drop_item_fk FOREIGN KEY (item)
 		REFERENCES item (id),
 	CONSTRAINT drop_evento_fk FOREIGN KEY (evento)
-		REFERENCES evento (codigo)
+		REFERENCES evento (id)
+);
+
+CREATE TABLE sessao (
+-- Equivalente a um save slot
+	id BIGSERIAL,
+	criado_em TIMESTAMP DEFAULT Now(),
+	player VARCHAR(100) NOT NULL,
+	
+	CONSTRAINT sessao_pk PRIMARY KEY (id),
+	CONSTRAINT sessao_player_fk FOREIGN KEY (player)
+		REFERENCES player (nome)
+);
+
+CREATE TABLE sessao_quadrado (
+	sessao BIGINT,
+	pos_x SMALLINT,
+	pos_y SMALLINT,
+	area VARCHAR(50),
+	mapa VARCHAR(100),
+	visitado BOOLEAN DEFAULT FALSE,
+	item_pego BOOLEAN DEFAULT FALSE,
+	obstaculo_ativo BOOLEAN DEFAULT FALSE,
+	efeito_ativo BOOLEAN DEFAULT FALSE,
+	
+	CONSTRAINT sessao_quadrado_pk PRIMARY KEY (sessao, pos_x, pos_y, area, mapa),
+	CONSTRAINT sessao_quadrado_sessao_fk FOREIGN KEY (sessao)
+		REFERENCES sessao (id),
+	CONSTRAINT sessao_quadrado_quadrado_fk FOREIGN KEY (pos_x, pos_y, area, mapa)
+		REFERENCES quadrado (pos_x, pos_y, area, mapa)
+);
+
+CREATE TABLE estado_evento (
+	sessao BIGINT,
+	evento BIGINT,
+	desbloqueado BOOLEAN DEFAULT FALSE,
+	ativo BOOLEAN DEFAULT FALSE,
+	
+	CONSTRAINT estado_evento_pk PRIMARY KEY (sessao, evento),
+	CONSTRAINT estado_evento_sessao_fk FOREIGN KEY (sessao)
+		REFERENCES sessao (id),
+	CONSTRAINT estado_evento_evento_fk FOREIGN KEY (evento)
+		REFERENCES evento (id),
+	CONSTRAINT estado_evento_ck CHECK (NOT (desbloqueado = FALSE AND ativo = TRUE))
+);
+
+CREATE TABLE mapa_completo (
+	sessao BIGINT,
+	mapa VARCHAR(100),
+	completo BOOLEAN DEFAULT FALSE,
+	
+	CONSTRAINT mapa_completo_pk PRIMARY KEY (sessao, mapa),
+	CONSTRAINT mapa_completo_sessao FOREIGN KEY (sessao)
+		REFERENCES sessao (id),
+	CONSTRAINT mapa_completo_mapa FOREIGN KEY (mapa)
+		REFERENCES mapa (nome)
 );
 
 COMMIT;
