@@ -493,4 +493,30 @@ CREATE TABLE mapa_completo (
 		REFERENCES mapa (nome)
 );
 
+CREATE TABLE comercio (
+
+	pos_x SMALLINT, 
+	pos_y SMALLINT,
+	area VARCHAR(50),
+	mapa VARCHAR(100),
+	id_loja INTEGER,
+
+	CONSTRAINT comercio_pk PRIMARY KEY (pos_x, pos_y, area, mapa),
+	CONSTRAINT area_fk FOREIGN KEY (area, mapa) REFERENCES area (nome, mapa),
+	CONSTRAINT id_loja_fk FOREIGN KEY (id_loja) REFERENCES loja (id)
+
+);
+
+CREATE TABLE venda (
+
+	id_loja SMALLINT,
+	id_item INTEGER,
+	
+
+	CONSTRAINT venda_pk PRIMARY KEY (id_loja, id_item),
+	CONSTRAINT loja_fk FOREIGN KEY (id_loja) REFERENCES loja (id),
+	CONSTRAINT id_item_fk FOREIGN KEY (id_item) REFERENCES item (id)
+
+);
+
 COMMIT;
