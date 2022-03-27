@@ -1,3 +1,30 @@
+INSERT INTO item (id, tipo) VALUES 
+('', '');
+
+INSERT INTO consumivel (id, nome, descricao, valor_compra, valor_venda, modificador_dano, modificador_energia) VALUES 
+('1', 'Arma-EXP-100', 'Material usado para melhorar as armas', '150', '100', '500', '0'),
+('2', 'Arma-EXP-250', 'Material usado para melhorar as armas', '250', '200', '500', '0'),
+('3', 'Arma-EXP-500', 'Material usado para melhorar as armas', '400', '300', '500', '0'),
+('4', 'Arma-EXP-1000', 'Material usado para melhorar as armas', '600', '500', '500', '0');
+
+INSERT INTO chave (id, nome, descricao, valor_compra, valor_venda) VALUES 
+('', '', '', '', '');
+
+INSERT INTO equip (id, tipo) VALUES 
+('', '');
+
+INSERT INTO armadura (id, nome, tipo, descricao, valor_compra, valor_venda, valor_upgrade, nivel, energia, ataque, defesa) VALUES 
+('', '', '', '', '', '', '', '', '', '', '');
+
+INSERT INTO arma (id, nome, tipo, descricao, valor_compra, valor_venda, valor_upgrade, nivel, energia, ataque, defesa) VALUES 
+('', '', '', '', '', '', '', '', '', '', '');
+
+INSERT INTO inventario (id, tamanho) VALUES 
+('', '');
+
+INSERT INTO slot (id_inventario, pos, item) VALUES 
+('', '', '');
+
 INSERT INTO personagem (nome, tipo) VALUES 
 ('Mega Man', 'player' ),
 ('Zero', 'player'),
