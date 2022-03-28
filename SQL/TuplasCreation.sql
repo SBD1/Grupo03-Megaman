@@ -142,3 +142,9 @@ INSERT INTO estado_evento (sessao, evento, desbloqueado, ativo) VALUES
 
 INSERT INTO mapa_completo (sessao, mapa, completo) VALUES 
 ('', '', '');
+
+INSERT INTO comercio (pos_x, pos_y, area, mapa, id_loja) VALUES 
+('', '', '', '', '');
+
+INSERT INTO venda (id_loja, id_item) VALUES 
+('', '');
