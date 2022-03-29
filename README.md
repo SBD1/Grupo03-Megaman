@@ -41,3 +41,12 @@ Abaixo a última versão do documento de Normalização (v1.0). As outras versõ
 <p align="center">
     <img src="Normalizacao/normalizacao_v1.0.jpg">
 </p>
+
+## Entrega Módulo 4 - SQL
+
+Este módulo tem como entregáveis:
+
+- O arquivo de [criação de tabelas](SQL/TableCreation.sql);
+- O arquivo de [inserção de tuplas](SQL/TuplasCreation.sql); e
+- A [implementação inicial do jogo](game).
+
