@@ -4,6 +4,10 @@ CREATE DOMAIN ITEMTYPE
 	AS VARCHAR(10) NOT NULL
 	CHECK (VALUE IN ('equip', 'consum', 'chave'));
 
+CREATE DOMAIN EQUIPTYPE
+	AS VARCHAR(10) NOT NULL 
+	CHECK (VALUE IN ('arma', 'armadura'));
+
 CREATE DOMAIN CHARTYPE
 	AS VARCHAR(7) NOT NULL
 	CHECK (VALUE IN ('npc', 'player'));
@@ -55,7 +59,7 @@ CREATE TABLE chave (
 
 CREATE TABLE equip (
 	id BIGINT,
-	tipo VARCHAR(10) NOT NULL CHECK (tipo IN ('arma', 'armadura')),
+	tipo EQUIPTYPE,
 	
 	CONSTRAINT equip_pk PRIMARY KEY (id)
 );
@@ -63,7 +67,6 @@ CREATE TABLE equip (
 CREATE TABLE armadura (
 	id SERIAL CONSTRAINT armadura_pk PRIMARY KEY,
 	nome VARCHAR(50) NOT NULL,
-	tipo VARCHAR(50) NOT NULL,
 	descricao VARCHAR(200),
 	valor_compra SMALLINT,
 	valor_venda SMALLINT,
@@ -80,7 +83,6 @@ CREATE TABLE armadura (
 CREATE TABLE arma ( 
 	id SERIAL CONSTRAINT arma_pk PRIMARY KEY,
 	nome VARCHAR(50) NOT NULL,
-	tipo VARCHAR(50) NOT NULL,
 	descricao VARCHAR(200),
 	valor_compra SMALLINT,
 	valor_venda SMALLINT,
@@ -114,7 +116,6 @@ CREATE TABLE slot (
 );
 
 CREATE TABLE personagem (
---	id SERIAL,
 	nome VARCHAR(100),
 	tipo CHARTYPE,
 	
@@ -380,7 +381,7 @@ CREATE TABLE equip_skill (
 	equipamento BIGINT,
 	habilidade INTEGER,
 	
-	CONSTRAINT equip_skill_pk PRIMARY KEY (equipamento),
+	CONSTRAINT equip_skill_pk PRIMARY KEY (equipamento, habilidade),
 	CONSTRAINT equip_skill_equipamento_fk FOREIGN KEY (equipamento)
 		REFERENCES equip (id),
 	CONSTRAINT equip_skill_habilidade_fk FOREIGN KEY (habilidade)
@@ -391,12 +392,30 @@ CREATE TABLE evento (
 	id BIGSERIAL PRIMARY KEY,
 	condicao VARCHAR(500),
 	tipo CHAR(1) NOT NULL CHECK (tipo IN ('d', 'b')),
-	ev_anterior BIGINT,
-	acionamento_direto BOOLEAN NOT NULL,
-	desbloqueado BOOLEAN DEFAULT false,
+	acionamento_direto BOOLEAN NOT NULL
+);
+
+CREATE TABLE dialogo (
+	id_evento BIGINT,
+	id_fala INTEGER,
+	ordem SMALLINT,
 	
-	CONSTRAINT evento_evento_fk FOREIGN KEY (ev_anterior)
-		REFERENCES evento (id)
+	CONSTRAINT dialogo_pk PRIMARY KEY (id_evento, id_fala),
+	CONSTRAINT dialogo_evento_fk FOREIGN KEY (id_evento)
+		REFERENCES evento (id),
+	CONSTRAINT dialogo_fala_fk FOREIGN KEY (id_fala)
+		REFERENCES fala (id)
+);
+
+CREATE TABLE batalha (
+	id_evento BIGINT,
+	id_npc VARCHAR(100),
+	
+	CONSTRAINT batalha_pk PRIMARY KEY (id_evento, id_npc),
+	CONSTRAINT batalha_evento FOREIGN KEY (id_evento)
+		REFERENCES evento (id),
+	CONSTRAINT batalha_npc FOREIGN KEY (id_npc)
+		REFERENCES npc (nome)
 );
 
 CREATE TABLE event_chain (
@@ -426,7 +445,6 @@ CREATE TABLE quadrado_evento (
 );
 
 CREATE TABLE drop (
--- 
 	item BIGINT,
 	evento BIGINT,
 	chance INTEGER,
@@ -502,21 +520,22 @@ CREATE TABLE comercio (
 	id_loja INTEGER,
 
 	CONSTRAINT comercio_pk PRIMARY KEY (pos_x, pos_y, area, mapa),
-	CONSTRAINT area_fk FOREIGN KEY (area, mapa) REFERENCES area (nome, mapa),
+--	CONSTRAINT area_fk FOREIGN KEY (area, mapa) REFERENCES area (nome, mapa),
+	CONSTRAINT comercio_quadrado_fk FOREIGN KEY (pos_x, pos_y, area, mapa)
+		REFERENCES quadrado (pos_x, pos_y, area, mapa),
 	CONSTRAINT id_loja_fk FOREIGN KEY (id_loja) REFERENCES loja (id)
-
 );
 
-CREATE TABLE venda (
-
-	id_loja SMALLINT,
-	id_item INTEGER,
-	
-
-	CONSTRAINT venda_pk PRIMARY KEY (id_loja, id_item),
-	CONSTRAINT loja_fk FOREIGN KEY (id_loja) REFERENCES loja (id),
-	CONSTRAINT id_item_fk FOREIGN KEY (id_item) REFERENCES item (id)
-
-);
+--CREATE TABLE venda (
+--
+--	id_loja SMALLINT,
+--	id_item INTEGER,
+--	
+--
+--	CONSTRAINT venda_pk PRIMARY KEY (id_loja, id_item),
+--	CONSTRAINT loja_fk FOREIGN KEY (id_loja) REFERENCES loja (id),
+--	CONSTRAINT id_item_fk FOREIGN KEY (id_item) REFERENCES item (id)
+--
+--);
 
 COMMIT;
