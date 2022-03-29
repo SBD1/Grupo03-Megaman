@@ -2,7 +2,11 @@ BEGIN;
 
 CREATE DOMAIN ITEMTYPE 
 	AS VARCHAR(10) NOT NULL
-	CHECK (VALUE IN ('equip', 'consum', 'chave'));
+	CHECK (VALUE IN ('equip', 'consumivel', 'chave'));
+
+CREATE DOMAIN EQUIPTYPE
+	AS VARCHAR(10) NOT NULL 
+	CHECK (VALUE IN ('arma', 'armadura'));
 
 CREATE DOMAIN EQUIPTYPE
 	AS VARCHAR(10) NOT NULL 
@@ -24,7 +28,7 @@ CREATE DOMAIN SEC_STAT
 
 CREATE DOMAIN QUADRADO_TYPE
 	AS VARCHAR(10) NOT NULL
-	CHECK (VALUE IN ('item', 'barreira', 'efeito', 'evento', 'conexao', 'loja'));
+	CHECK (VALUE IN ('item', 'barreira', 'efeito', 'evento', 'conexao', 'loja', 'entrada', 'saida'));
 
 CREATE TABLE item (
 	id BIGSERIAL,
