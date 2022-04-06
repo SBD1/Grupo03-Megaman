@@ -14,8 +14,8 @@ Repositório para o desenvolvimento do projeto de Megaman, do Grupo 3, na discip
 | [Ailton Aires Amado](https://github.com/ailtonaires) | 18/0011600 |
 | [André Lucas](https://github.com/andrelucasf) | 15/0005563 |
 | [Daniel Primo](https://github.com/danieldagerom) | 18/0063162 |
-| [Igor Aragão](https://github.com/roginaldosemog) | 15/0011903|
 | [Wagner M Cunha](https://github.com/wagnermc506) | 18/0029177 |
+| [Enzo Gabriel](https://github.com/enzoggqs) | 16/0119006 |
 
 ## Entrega Módulo 1 - Modelo Entidade Relacionamento (MER)
 
