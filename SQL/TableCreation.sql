@@ -1,12 +1,14 @@
+DROP DATABASE megaman;
+
+CREATE DATABASE megaman;
+
+\c megaman
+
 BEGIN;
 
 CREATE DOMAIN ITEMTYPE 
 	AS VARCHAR(10) NOT NULL
 	CHECK (VALUE IN ('equip', 'consumivel', 'chave'));
-
-CREATE DOMAIN EQUIPTYPE
-	AS VARCHAR(10) NOT NULL 
-	CHECK (VALUE IN ('arma', 'armadura'));
 
 CREATE DOMAIN EQUIPTYPE
 	AS VARCHAR(10) NOT NULL 
@@ -38,7 +40,7 @@ CREATE TABLE item (
 );
 
 CREATE TABLE consumivel (
-	id SERIAL CONSTRAINT consumivel_pk PRIMARY KEY,
+	id BIGINT CONSTRAINT consumivel_pk PRIMARY KEY,
 	nome VARCHAR(50) NOT NULL,
 	descricao VARCHAR(200),
 	valor_compra SMALLINT,
@@ -51,7 +53,7 @@ CREATE TABLE consumivel (
 );
 
 CREATE TABLE chave (
-	id SERIAL,
+	id BIGINT,
 	nome VARCHAR(50) NOT NULL,
 	descricao VARCHAR(200),
 	valor_compra SMALLINT,
@@ -69,7 +71,7 @@ CREATE TABLE equip (
 );
 
 CREATE TABLE armadura (
-	id SERIAL CONSTRAINT armadura_pk PRIMARY KEY,
+	id BIGINT CONSTRAINT armadura_pk PRIMARY KEY,
 	nome VARCHAR(50) NOT NULL,
 	descricao VARCHAR(200),
 	valor_compra SMALLINT,
@@ -85,7 +87,7 @@ CREATE TABLE armadura (
 );
 
 CREATE TABLE arma ( 
-	id SERIAL CONSTRAINT arma_pk PRIMARY KEY,
+	id BIGINT CONSTRAINT arma_pk PRIMARY KEY,
 	nome VARCHAR(50) NOT NULL,
 	descricao VARCHAR(200),
 	valor_compra SMALLINT,
