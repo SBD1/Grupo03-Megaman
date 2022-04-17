@@ -28,9 +28,10 @@ CREATE DOMAIN SEC_STAT
 	AS SMALLINT NOT NULL 
 	CHECK (VALUE >= 0 AND VALUE < 301);
 
+-- entrada0 e saida0 são entradas/saídas sem nenhuma conexão com outro quadrado
 CREATE DOMAIN QUADRADO_TYPE
 	AS VARCHAR(10) NOT NULL
-	CHECK (VALUE IN ('item', 'barreira', 'efeito', 'evento', 'conexao', 'loja', 'entrada', 'saida'));
+	CHECK (VALUE IN ('item', 'barreira', 'efeito', 'evento', 'conexao', 'loja', 'entrada', 'saida', 'entrada0', 'saida0'));
 
 CREATE TABLE item (
 	id BIGSERIAL,
@@ -41,7 +42,7 @@ CREATE TABLE item (
 
 CREATE TABLE consumivel (
 	id BIGINT CONSTRAINT consumivel_pk PRIMARY KEY,
-	nome VARCHAR(50) NOT NULL,
+	nome VARCHAR(50) NOT NULL UNIQUE,
 	descricao VARCHAR(200),
 	valor_compra SMALLINT,
 	valor_venda SMALLINT,
@@ -54,7 +55,7 @@ CREATE TABLE consumivel (
 
 CREATE TABLE chave (
 	id BIGINT,
-	nome VARCHAR(50) NOT NULL,
+	nome VARCHAR(50) NOT NULL UNIQUE,
 	descricao VARCHAR(200),
 	valor_compra SMALLINT,
 	valor_venda SMALLINT,
@@ -72,7 +73,7 @@ CREATE TABLE equip (
 
 CREATE TABLE armadura (
 	id BIGINT CONSTRAINT armadura_pk PRIMARY KEY,
-	nome VARCHAR(50) NOT NULL,
+	nome VARCHAR(50) NOT NULL UNIQUE,
 	descricao VARCHAR(200),
 	valor_compra SMALLINT,
 	valor_venda SMALLINT,
@@ -88,7 +89,7 @@ CREATE TABLE armadura (
 
 CREATE TABLE arma ( 
 	id BIGINT CONSTRAINT arma_pk PRIMARY KEY,
-	nome VARCHAR(50) NOT NULL,
+	nome VARCHAR(50) NOT NULL UNIQUE,
 	descricao VARCHAR(200),
 	valor_compra SMALLINT,
 	valor_venda SMALLINT,
@@ -270,13 +271,13 @@ CREATE TABLE altera (
 );
 
 CREATE TABLE destranca (
-	chave INTEGER,
+	chave BIGINT,
 	pos_x SMALLINT,
 	pos_y SMALLINT,
 	area VARCHAR(50),
 	mapa VARCHAR(100),
 
-	CONSTRAINT destranca_pk PRIMARY KEY (chave, pos_x, pos_y, area, mapa),
+	CONSTRAINT destranca_pk PRIMARY KEY (pos_x, pos_y, area, mapa),
 	CONSTRAINT destranca_chave_fk FOREIGN KEY (chave)
 		REFERENCES chave (id),
 	CONSTRAINT altera_quadrado_fk FOREIGN KEY (pos_x, pos_y, area, mapa)
@@ -289,6 +290,17 @@ CREATE TABLE usa (
 	id_player VARCHAR(100) CONSTRAINT usa_id_player_fk REFERENCES player (nome),
 
 	CONSTRAINT usa_pk PRIMARY KEY (id_chave, id_player)
+	
+	--Serve para consultar se um player pode alterar o estado
+	-- da porta e salvar no histórico destranca
+);
+
+CREATE TABLE chaveiro (
+
+	id_chave INTEGER CONSTRAINT chaveiro_id_chave_fk REFERENCES chave (id),
+	id_player VARCHAR(100) CONSTRAINT chaveiro_id_player_fk REFERENCES player (nome),
+
+	CONSTRAINT chaveiro_pk PRIMARY KEY (id_chave, id_player)
 	
 	--Serve para consultar se um player pode alterar o estado
 	-- da porta e salvar no histórico destranca
@@ -332,7 +344,7 @@ CREATE TABLE melhoria (
 );
 
 CREATE TABLE fala (
-	id INTEGER,
+	id BIGSERIAL,
 	texto VARCHAR(200),
 	
 	CONSTRAINT fala_pk PRIMARY KEY (id)
@@ -398,7 +410,8 @@ CREATE TABLE evento (
 	id BIGSERIAL PRIMARY KEY,
 	condicao VARCHAR(500),
 	tipo CHAR(1) NOT NULL CHECK (tipo IN ('d', 'b')),
-	acionamento_direto BOOLEAN NOT NULL
+	acionamento_direto BOOLEAN NOT NULL,
+	estado_desbloqueio_inicial BOOLEAN DEFAULT (FALSE)
 );
 
 CREATE TABLE dialogo (
