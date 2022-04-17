@@ -117,7 +117,6 @@ DECLARE
     is_walkable BOOLEAN;
     is_barrier BOOLEAN;
     is_barrier_blocked BOOLEAN;
-    rslt quad_t;
 BEGIN
     SELECT check_quad_is_walkable(x, y, area_, mapa_) INTO is_walkable;
 
@@ -148,7 +147,7 @@ DECLARE
     e_ativo BOOLEAN;
 BEGIN
     FOR rec IN SELECT * FROM quadrado_evento QE WHERE 
-        QE.pos_x = x AND QE.pos_y = y AND QE.area = area_ AND QE.mapa = mapa_;
+        QE.pos_x = x AND QE.pos_y = y AND QE.area = area_ AND QE.mapa = mapa_
     LOOP
         SELECT ST.desbloqueado, ST.ativo INTO e_desbloqueado, e_ativo
             FROM estado_quadrado ST
@@ -162,7 +161,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION unblock_event(event_id BIGINT, session_ BIGINT) AS $$
+CREATE OR REPLACE FUNCTION unblock_event(event_id BIGINT, session_ BIGINT) RETURNS void AS $$
 DECLARE
     rec record;
 BEGIN
@@ -177,7 +176,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION take_item(mapa text, area text, x INT, y INT, session_id BIGINT) RETURNS void AS $$
 DECLARE
-    item_id BIGINT,
+    item_id BIGINT;
     tipo_item TEXT;
     session_player text;
     not_null_count INT;

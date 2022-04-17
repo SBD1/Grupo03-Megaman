@@ -130,6 +130,8 @@ BEGIN
 END;
 $check_quadrado_evento$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS check_quad_ev_tg
+DROP TRIGGER IF EXISTS check_quad_ev_tg ON quadrado_evento;
+
+CREATE TRIGGER check_quad_ev_tg
 BEFORE INSERT ON quadrado_evento
 FOR EACH ROW EXECUTE PROCEDURE check_quadrado_evento();
