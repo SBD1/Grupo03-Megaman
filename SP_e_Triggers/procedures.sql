@@ -1,3 +1,4 @@
+-- Adiciona item no quadrado
 CREATE OR REPLACE FUNCTION add_item_to_quadrado(x INT, y INT, area TEXT, mapa TEXT, item_name TEXT, item_type TEXT) RETURNS void AS $$
 DECLARE
     item_id item.id%TYPE;
@@ -17,6 +18,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Cria a relação de qual chave destranca qual quadrado
 CREATE OR REPLACE FUNCTION set_destranca(x INT, y INT, area_ TEXT, mapa_ TEXT, item_name TEXT) RETURNS void AS $$
 DECLARE
     item_id item.id%TYPE;
@@ -42,6 +44,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Cria um evento do tipo diálogo.
 CREATE OR REPLACE FUNCTION create_event_dialog(personagem TEXT, texto TEXT, condicao TEXT, 
     acionamento_direto BOOLEAN, estado_desbloqueio_inicial BOOLEAN) RETURNS BIGINT AS $$
 DECLARE
@@ -57,7 +60,7 @@ BEGIN
 
     FOREACH fala_ IN ARRAY falas
     LOOP
-        INSERT INTO fala (texto) VALUES (fala_) RETURNING id INTO fala_id;
+        INSERT INTO fala (texto) VALUES (personagem || ': ' || fala_) RETURNING id INTO fala_id;
         INSERT INTO dialogo (id_evento, id_fala, ordem) VALUES (event_id, fala_id, i);
         i := i + 1;
     END LOOP;
@@ -65,6 +68,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Checa se um quadrado é andável
 CREATE OR REPLACE FUNCTION check_quad_is_walkable(x INT, y INT, area_ TEXT, mapa_ TEXT) RETURNS BOOLEAN AS $$
 DECLARE
     num_records INT;
@@ -77,6 +81,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- checa se há uma barreira no quadrado
 CREATE OR REPLACE FUNCTION check_quad_barrier(player_ TEXT, x INT, y INT, area_ TEXT, mapa_ TEXT, OUT is_barrier BOOLEAN, OUT is_locked BOOLEAN) AS $$
 DECLARE
     rslt INT;
@@ -112,6 +117,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- checa se o player pode andar para um quadrado
 CREATE OR REPLACE FUNCTION walk_to(player_ TEXT, x INT, y INT, area_ TEXT, mapa_ TEXT) RETURNS BOOLEAN AS $$
 DECLARE
     is_walkable BOOLEAN;
@@ -139,6 +145,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Retorna o id de um evento que ainda deve acontecer, se tiver algum
 CREATE OR REPLACE FUNCTION get_active_event(x INT, y INT, area_ TEXT, mapa_ TEXT, sessao_ BIGINT) RETURNS BIGINT AS $$
 DECLARE
     event_id evento.id%TYPE;
@@ -161,6 +168,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- desbloqueia os eventos
 CREATE OR REPLACE FUNCTION unblock_event(event_id BIGINT, session_ BIGINT) RETURNS void AS $$
 DECLARE
     rec record;
@@ -173,7 +181,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
+-- pega um item do chão e coloca no inventário do player
 CREATE OR REPLACE FUNCTION take_item(mapa text, area text, x INT, y INT, session_id BIGINT) RETURNS void AS $$
 DECLARE
     item_id BIGINT;
