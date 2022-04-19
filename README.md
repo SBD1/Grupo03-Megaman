@@ -54,6 +54,6 @@ Este módulo tem como entregáveis:
 
 Este módulo tem como entregáveis:
 
-- O arquivo de [procedures e triggers](https://github.com/SBD1/Grupo03-Megaman/tree/main/SP_e_Triggers);
+- Os arquivos de [procedures e triggers](https://github.com/SBD1/Grupo03-Megaman/tree/main/SP_e_Triggers);
 
 
