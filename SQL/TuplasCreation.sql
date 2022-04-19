@@ -35,8 +35,8 @@ INSERT INTO arma (nome, descricao, valor_compra, valor_venda, valor_upgrade, niv
 --(1, '1', '2');
 
 INSERT INTO personagem (nome, tipo) VALUES 
-('Mega Man', 'player' ),
-('Zero', 'player'),
+-- ('Mega Man', 'player' ),
+-- ('Zero', 'player'),
 ('Ball De Voux', 'npc'),
 ('Metall C-15', 'npc'),
 ('Spiky', 'npc'),

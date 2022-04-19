@@ -245,3 +245,158 @@ BEGIN
 	UPDATE slot SET item=NULL WHERE id_inventario = invent_id AND pos=pos_item;
 END;
 $$ LANGUAGE plpgsql;
+
+
+-- Cria instancia de batalha entre um player e um npc
+CREATE OR REPLACE FUNCTION create_battle_instance(player_ TEXT, npc_ TEXT) RETURNS BIGINT AS $$
+DECLARE 
+    battle_id BIGINT;
+BEGIN
+    INSERT INTO instancia_batalha (nome_player, nome_npc) VALUES (player_, npc_)
+        RETURNING id INTO battle_id;
+
+    INSERT INTO instancia_inimigo (batalha_id, nome, hp, energia, ataque, defesa, evasao, agilidade, arma, armadura)
+        SELECT battle_id, npc.nome, npc.hp, npc.energia, 
+        npc.ataque, npc.defesa, npc.evasao, 
+        npc.agilidade, npc.arma, npc.armadura 
+        FROM npc WHERE npc.nome = npc_;
+    
+    RETURN battle_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- interação de ataque do player
+CREATE OR REPLACE FUNCTION player_ataca(player_ TEXT, npc_ TEXT, battle_id BIGINT) RETURNS TEXT AS $$
+DECLARE
+    ataque_player INT;
+    agilidade_player INT;
+    arma_id BIGINT;
+    ataque_arma INT;
+    agilidade_arma INT;
+    defesa_npc INT;
+    evasao_npc INT;
+    armadura_id BIGINT;
+    defesa_armadura INT;
+    evasao_armadura INT;
+    acerto BOOLEAN;
+    critico BOOLEAN;
+    rand_value INT;
+    dano INT;
+BEGIN
+    -- calcula ataque e agilidade total do player
+    SELECT ataque, agilidade, arma INTO ataque_player, agilidade_player, arma_id 
+        FROM player WHERE nome=player_;
+    IF (arma_id IS NOT NULL) THEN
+        SELECT ataque, agilidade INTO ataque_arma, agilidade_arma
+            FROM arma WHERE id=arma_id;
+        ataque_player := ataque_player + ataque_arma;
+        agilidade_player := agilidade_player + agilidade_arma;
+    END IF;
+
+    -- calcula defesa e evasao total do npc
+    SELECT defesa, evasao, armadura INTO defesa_npc, evasao_npc, armadura_id
+        FROM instancia_inimigo WHERE batalha_id = battle_id AND nome = npc_;
+
+    IF (armadura_id IS NOT NULL) THEN
+        SELECT defesa, evasao INTO defesa_armadura, evasao_armadura
+            FROM armadura WHERE id=armadura_id;
+        defesa_npc := defesa_npc + defesa_armadura;
+        evasao_npc := evasao_npc + evasao_armadura;
+    END IF;
+
+    -- testa se o ataque vai acertar
+    IF (agilidade_player <= evasao_npc) THEN
+        RETURN player_ || 'errou o ataque';
+    END IF;
+
+    rand_value := floor(random() * 10+1);
+
+    IF (rand_value > 8) THEN
+        ataque_player := ataque_player * 2;
+        critico := TRUE;
+    ELSE
+        critico := FALSE;
+    END IF;
+
+    IF (ataque_player - defesa_npc > 0) THEN
+        UPDATE instancia_inimigo SET hp=ataque_player-defesa_npc
+            WHERE batalha_id = battle_id AND nome = npc_;
+        RETURN player_ || 'causou' || quote_literal(ataque_player-defesa_npc) || 'de dano a' || npc_;
+    ELSE
+        RETURN player_ || 'causou' || quote_literal(0) || 'de dano a' || npc_;
+    END IF;
+
+END;
+$$ LANGUAGE plpgsql;
+
+-- interação de ataque do npc
+CREATE OR REPLACE FUNCTION npc_ataca(player_ TEXT, npc_ TEXT, battle_id BIGINT) RETURNS TEXT AS $$
+DECLARE
+    ataque_npc INT;
+    agilidade_npc INT;
+    arma_id BIGINT;
+    ataque_arma INT;
+    agilidade_arma INT;
+    defesa_player INT;
+    evasao_player INT;
+    armadura_id BIGINT;
+    defesa_armadura INT;
+    evasao_armadura INT;
+    acerto BOOLEAN;
+    critico BOOLEAN;
+    rand_value INT;
+    dano INT;
+BEGIN
+    -- calcula ataque e agilidade total do npc
+    SELECT ataque, agilidade, arma INTO ataque_npc, agilidade_npc, arma_id 
+        FROM instancia_inimigo WHERE batalha_id=battle_id AND nome=npc_;
+    IF (arma_id IS NOT NULL) THEN
+        SELECT ataque, agilidade INTO ataque_arma, agilidade_arma
+            FROM arma WHERE id=arma_id;
+        ataque_npc := ataque_npc + ataque_arma;
+        agilidade_npc := agilidade_npc + agilidade_arma;
+    END IF;
+
+    -- calcula defesa e evasao total do player
+    SELECT defesa, evasao, armadura INTO defesa_player, evasao_player, armadura_id
+        FROM player WHERE nome=player_;
+
+    IF (armadura_id IS NOT NULL) THEN
+        SELECT defesa, evasao INTO defesa_armadura, evasao_armadura
+            FROM armadura WHERE id=armadura_id;
+        defesa_player := defesa_player + defesa_armadura;
+        evasao_player := evasao_player + evasao_armadura;
+    END IF;
+
+    -- testa se o ataque vai acertar
+    IF (agilidade_npc <= evasao_player) THEN
+        RETURN npc_ || 'errou o ataque';
+    END IF;
+
+    rand_value := floor(random() * 10+1);
+
+    IF (rand_value > 8) THEN
+        ataque_npc := ataque_npc * 2;
+        critico := TRUE;
+    ELSE
+        critico := FALSE;
+    END IF;
+
+    IF (ataque_npc - defesa_player > 0) THEN
+        UPDATE player SET hp_atual=ataque_npc-defesa_player
+            WHERE nome = player_;
+        RETURN npc_ || 'causou' || quote_literal(ataque_npc-defesa_player) || 'de dano a' || player_;
+    ELSE
+        RETURN npc_ || 'causou' || quote_literal(0) || 'de dano a' || player_;
+    END IF;
+
+END;
+$$ LANGUAGE plpgsql;
+
+-- Deleta as instancias de inimigo e da batalha
+CREATE OR REPLACE FUNCTION finish_battle_instance(battle_id BIGINT) RETURNS void AS $$
+BEGIN
+    DELETE FROM instancia_inimigo WHERE batalha_id=battle_id;
+    DELETE FROM instancia_batalha WHERE id=battle_id;
+END;
+$$ LANGUAGE plpgsql;

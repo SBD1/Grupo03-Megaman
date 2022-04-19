@@ -82,7 +82,8 @@ CREATE TABLE armadura (
 	energia SMALLINT,
 	ataque SMALLINT,
 	defesa SMALLINT,
-	
+	evasao SMALLINT,
+
 	CHECK  ((valor_compra > 0 ) AND (valor_venda > 0) AND (valor_upgrade > 0) AND (nivel > 0))
 		
 );
@@ -134,7 +135,9 @@ CREATE TABLE player (
 	nome VARCHAR(100),
 	inventario INTEGER,
 	hp PRIM_STAT DEFAULT (50),
+	hp_atual PRIM_STAT DEFAULT (50),
 	energia PRIM_STAT DEFAULT (30),
+	energia_atual PRIM_STAT DEFAULT (30),
 	ataque SEC_STAT DEFAULT (10),
 	defesa SEC_STAT DEFAULT (10),
 	evasao SEC_STAT DEFAULT (10),
@@ -543,6 +546,38 @@ CREATE TABLE comercio (
 	CONSTRAINT comercio_quadrado_fk FOREIGN KEY (pos_x, pos_y, area, mapa)
 		REFERENCES quadrado (pos_x, pos_y, area, mapa),
 	CONSTRAINT id_loja_fk FOREIGN KEY (id_loja) REFERENCES loja (id)
+);
+
+CREATE TABLE instancia_batalha (
+	id BIGSERIAL,
+	nome_player VARCHAR(100),
+	nome_npc 	VARCHAR(100),
+
+	CONSTRAINT instancia_batalha_pk PRIMARY KEY (id),
+	CONSTRAINT instancia_batalha_player_fk FOREIGN KEY (nome_player) REFERENCES player (nome),
+	CONSTRAINT instancia_batalha_npc_fk FOREIGN KEY (nome_npc) REFERENCES npc (nome)
+);
+
+CREATE TABLE instancia_inimigo (
+	-- instancias de npcs em batalhas.
+	batalha_id BIGINT,
+	nome VARCHAR(100),
+	hp PRIM_STAT,
+	energia PRIM_STAT,
+	ataque SEC_STAT,
+	defesa SEC_STAT,
+	evasao SEC_STAT,
+	agilidade SEC_STAT,
+	arma BIGINT,
+	armadura BIGINT,
+	
+	CONSTRAINT npc_inst_pk PRIMARY KEY (batalha_id, nome),
+	CONSTRAINT npc_inst_arma_fk FOREIGN KEY (arma)
+		REFERENCES arma (id),
+	CONSTRAINT npc_inst_armadura_fk FOREIGN KEY (armadura)
+		REFERENCES armadura (id),
+	CONSTRAINT npc_inst_batalha_fk FOREIGN KEY (batalha_id)
+		REFERENCES instancia_batalha (id)
 );
 
 --CREATE TABLE venda (
