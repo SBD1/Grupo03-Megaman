@@ -50,3 +50,10 @@ Este módulo tem como entregáveis:
 - O arquivo de [inserção de tuplas](SQL/TuplasCreation.sql); e
 - A [implementação inicial do jogo](game).
 
+## Entrega Módulo 5 - Procedures e Triggers
+
+Este módulo tem como entregáveis:
+
+- O arquivo de [procedures e triggers](https://github.com/SBD1/Grupo03-Megaman/tree/main/SP_e_Triggers);
+
+
