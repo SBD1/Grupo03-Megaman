@@ -213,3 +213,27 @@ BEGIN
     END LOOP;
 END;
 $$ LANGUAGE plpgsql;
+
+
+-- Busca os itens do usuário na sessão
+CREATE OR REPLACE FUNCTION list_itens(session_player TEXT) RETURNS SETOF slot AS $$
+DECLARE
+	invent_id INTEGER;
+
+BEGIN
+	SELECT player.inventario INTO invent_id FROM player where nome = session_player;
+	RETURN QUERY SELECT * FROM slot WHERE id_inventario = invent_id;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Dropa um item do usuário
+CREATE OR REPLACE FUNCTION drop_item(session_player TEXT, pos_item SMALLINT) RETURNS VOID AS $$
+DECLARE
+	invent_id INTEGER;
+
+BEGIN
+	SELECT player.inventario INTO invent_id FROM player where nome = session_player;
+	UPDATE slot SET item=NULL WHERE id_inventario = invent_id AND pos=pos_item;
+END;
+$$ LANGUAGE plpgsql;
