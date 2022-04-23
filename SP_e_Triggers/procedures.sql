@@ -430,3 +430,24 @@ BEGIN
         WHERE QT.tipo='entrada0' AND QT.mapa=mapa_ AND QT.area=area_;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION verifica_tipo_item(session_id BIGINT, slot_pos INT,  
+    OUT item_type item.tipo%TYPE, OUT item_id item.id%TYPE ) RETURNS void AS $$
+
+DECLARE 
+    id_inventario int;
+    session_player text;
+    inventario_id inventario.id%TYPE;
+BEGIN
+
+    SELECT sessao.player INTO session_player FROM sessao
+        WHERE sessao.id = session_id;
+
+    SELECT player.inventario INTO inventario_id FROM player
+        WHERE player.nome = session_player;
+
+    SELECT item.tipo, item.id INTO item_type, item_id FROM inventario, slot, item
+        WHERE slot.id_inventario = inventario_id and slot.pos = slot_pos and slot.item = item.id;
+
+END;
+$$ LANGUAGE plpgsql;
