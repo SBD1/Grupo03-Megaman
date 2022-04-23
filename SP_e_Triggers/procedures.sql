@@ -451,3 +451,43 @@ BEGIN
 
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION equipa_arma(session_id BIGINT, item_type item.tipo%TYPE, item_id item.id%TYPE ) RETURNS void AS $$
+
+DECLARE
+    session_player text;
+    arma player.arma%TYPE;
+    armamento equip.tipo%TYPE;
+
+BEGIN
+
+    SELECT sessao.player INTO session_player FROM sessao
+        WHERE sessao.id = session_id;
+
+    SELECT equip.tipo INTO armamento FROM equip, item_id
+        WHERE equip.id = item_id;
+
+    IF (armamento = 'arma') THEN 
+
+        UPDATE player SET arma=item_id WHERE player.nome = session_player;
+
+    ELSIF (armamento = 'armadura') THEN
+        equipa_armadura (session_player, item_type, item_id);
+
+    END IF;
+
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION equipa_armadura(session_player TEXT, item_type item.tipo%TYPE, item_id item.id%TYPE ) RETURNS void AS $$
+
+DECLARE
+    armadura player.armadura%TYPE;
+
+BEGIN
+
+    UPDATE player SET armadura=item_id WHERE player.nome = session_player;
+
+END;
+$$ LANGUAGE plpgsql;
+
