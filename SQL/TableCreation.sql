@@ -482,7 +482,7 @@ CREATE TABLE sessao (
 -- Equivalente a um save slot
 	id BIGSERIAL,
 	criado_em TIMESTAMP DEFAULT Now(),
-	player VARCHAR(100) NOT NULL,
+	player VARCHAR(100) NOT NULL UNIQUE,
 	
 	CONSTRAINT sessao_pk PRIMARY KEY (id),
 	CONSTRAINT sessao_player_fk FOREIGN KEY (player)

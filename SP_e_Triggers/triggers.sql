@@ -139,7 +139,7 @@ FOR EACH ROW EXECUTE PROCEDURE check_quadrado_evento();
 
 
 -- player
-
+-- TODO criar um parecido para npc
 -- Atualizar tabela personagem automaticamente quando modifica player
 CREATE OR REPLACE FUNCTION update_player() RETURNS TRIGGER AS $update_player$
 

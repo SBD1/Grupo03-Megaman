@@ -1,57 +1,170 @@
-import pygame as pg
-# from pygame.locals import *
+from locale import currency
+import psycopg2 as pg
+import queries as query
+from postgres_handler import get_cursor, close_all, commit
 
-from grid import Grid
-from player import Player
-from constants import ColorConst
+class Player:
+    nome: str
+    inventario: int
 
-screen_width = 832
-screen_height = 624
-screen_size = (screen_width, screen_height)
+class Position:
+    x: int
+    y: int
+    area: str
+    mapa: str
 
-def create_surface(size: tuple[int, int], 
-                    fill_color: pg.Color|None = None) -> pg.Surface:
-    surface = pg.Surface(size)
-    surface = surface.convert()
-    if fill_color:
-        surface.fill(fill_color)
-        surface.set_alpha(fill_color.a)
-    return surface
+    def __init__(self, x, y, area, mapa):
+        self.x = x
+        self.y = y
+        self.area = area
+        self.mapa = mapa
 
-pg.init()
-screen = pg.display.set_mode((screen_width, screen_height), pg.SCALED)
+    def __repr__(self):
+        return f'{self.x}, {self.y}, {self.area}, {self.mapa}'
 
-pg.display.set_caption("MEGAMAN")
+class State:
+    session: int
+    player: Player
+    current_pos: Position
 
-layer_zero = create_surface(screen.get_size(), fill_color=ColorConst.BLACK)
-screen.blit(layer_zero, (0, 0))
-pg.display.update()
+def get_int_input(text: str):
+    if text != '':
+        print(text)
+    return int(input('> ').strip())
 
-layer_one_size = (
-    int(screen_width * 90 / 100),
-    int(screen_height * 90 / 100)
-)
+def get_str_input(text: str):
+    if text != '':
+        print(text)
+    return input('> ').strip()
 
-layer_one = create_surface(layer_one_size, fill_color=ColorConst.DEFAULT_COLOR)
+def draw_map(cur: 'pg.cursor', session: State):
+    current_pos = session.current_pos
+    cur.execute("SELECT largura, altura FROM area WHERE mapa=%s AND nome=%s", 
+        (current_pos.mapa, current_pos.area))
+    largura, altura = cur.fetchone()
 
-grid = Grid((50, 50), (10, 10))
+    grid = dict()
+    cur.execute("SELECT pos_x, pos_y, visitado FROM sessao_quadrado WHERE sessao=%s AND area=%s AND mapa=%s",
+        (session.session, current_pos.area, current_pos.mapa))
 
-clock = pg.time.Clock()
-run = True
+    for x, y, visited in cur.fetchall():
+        grid[(x, y)] = visited
 
-player = Player("Zero")
+    print('')
+    for line in range(1, altura+1):
+        line_str = ["x"] * altura
+        for column in range(1, largura+1):
+            if grid.get((column, line)):
+                if current_pos.y == line and current_pos.x == column:
+                    line_str[column-1] = "@"     
+                else:
+                    line_str[column-1] = "#"
+        print("".join(line_str))
+    print('')
 
-while (run):
+def get_or_create_session(cur: 'pg.cursor') -> State:
+    while True:
+        option: int = get_int_input("1 - New Game\n2 - Load Game")
+        if option == 1:
+            # cria sessao
+            name = get_str_input("Digite o nome do personagem")
+            cur.execute(query.insert_player, (name,))
+            invent_id = cur.fetchone()
+            cur.execute(query.create_session, (name,))
+            session_id = cur.fetchone()
 
-    for event in pg.event.get():
-        if event.type == pg.KEYDOWN:
-            if event.key == pg.K_q:
-                run = False
-            if event.key in [pg.K_DOWN, pg.K_UP, pg.K_LEFT, pg.K_RIGHT]:
-                grid.move_character(event.key, player)
+            player = Player()
+            player.inventario = invent_id[0]
+            player.nome = name
 
-    grid.draw_grid(layer_one)
-    screen.blit(layer_one, (0, 0))
+            sessao = State()
+            sessao.session = session_id[0]
+            sessao.player = player
+
+            return sessao
+
+        elif option == 2:
+            cur.execute("SELECT id, to_char(criado_em, 'DD/MM/YYYY HH24:MI'), player FROM sessao;")
+            sessions = cur.fetchall()
+            for i, s in enumerate(sessions, start=1):
+                print(f'{i} - {s[2]}    criado em: {s[1]}')
+            session_choice = get_int_input("Selecione um dos slots ou digite 0 para voltar")
+            if session_choice == 0:
+                continue
+            if session_choice <= len(sessions):
+                session = State()
+                session.session = sessions[session_choice-1][0]
+                
+                cur.execute("SELECT player.nome, player.inventario FROM player, sessao WHERE sessao.id=%s AND player.nome=sessao.player;", (session.session,))
+                player = Player()
+                player_data = cur.fetchone()
+                player.nome = player_data[0]
+                player.inventario = player_data[1]
+
+                session.player = player
+                return session
+            else:
+                print("Opção inválida.")
+        else:
+            print('Opção inexistente')
+
+def move_to(cur: 'pg.cursor',session: State, direction: str):
+    current_pos = session.current_pos
+    new_pos = Position(current_pos.x, current_pos.y, current_pos.area, current_pos.mapa)
+    if direction == "up":
+        new_pos.y -= 1
+    elif direction == "down":
+        new_pos.y += 1
+    elif direction == "right":
+        new_pos.x += 1
+    elif direction == "left":
+        new_pos.x -= 1
+    cur.execute("SELECT * FROM walk_to(%s, %s, %s, %s, %s)", 
+        (session.player.nome, new_pos.x, new_pos.y, new_pos.area, new_pos.mapa))
+
+    can_move = cur.fetchone()[0]
+    if can_move:
+        session.current_pos = new_pos
+        cur.execute("SELECT mark_visited(%s, %s, %s, %s, %s)",
+            (session.session, session.current_pos.x, session.current_pos.y,
+             session.current_pos.area, session.current_pos.mapa))
+
+def game_loop(cur: 'pg.cursor', session: State):
+    move_to(cur, session, 'stay')
+    while True:
+        draw_map(cur, session)
+        command = get_str_input("")
+        if command in ["up", "down", "left", "right"]:
+            move_to(cur, session, command)
+        elif command == "items":
+            ...
+        elif command == "status":
+            ...
+        elif command == "look_around":
+            ...
+        elif command == "take item":
+            ...
+        elif command == "help":
+            ...
+        
+
+if __name__ == "__main__":
+    try:
+        cur = get_cursor()
+        session: State = get_or_create_session(cur)
+        print(session.session, session.player.nome, session.player.inventario)
+        commit()
+
+        cur.execute("SELECT * FROM enter_area(%s, %s, %s);", (session.session, "MONTANHA NEVADA", "Entrada"))
+        start_pos = cur.fetchone()
+        session.current_pos = Position(*start_pos)
+        
+        print(start_pos)
+
+        game_loop(cur, session)
     
-    pg.display.update()
-    clock.tick(30)
+    except Exception as e:
+        close_all()
+        raise e
+    else:
+        close_all()

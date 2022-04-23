@@ -80,27 +80,27 @@ INSERT INTO area (mapa, nome, largura, altura) VALUES
 ('MONTANHA NEVADA', 'Entrada', 9, 9);
 
 INSERT INTO quadrado (pos_x, pos_y, area, mapa, chance_batalha) VALUES 
-(9, 5, 'Entrada', 'MONTANHA NEVADA', 0),
-(8, 5, 'Entrada', 'MONTANHA NEVADA', 30),
-(7, 5, 'Entrada', 'MONTANHA NEVADA', 30),
-(6, 5, 'Entrada', 'MONTANHA NEVADA', 30),
+(5, 9, 'Entrada', 'MONTANHA NEVADA', 0),
+(5, 8, 'Entrada', 'MONTANHA NEVADA', 30),
+(5, 7, 'Entrada', 'MONTANHA NEVADA', 30),
+(5, 6, 'Entrada', 'MONTANHA NEVADA', 30),
 (5, 5, 'Entrada', 'MONTANHA NEVADA', 30),
-(4, 5, 'Entrada', 'MONTANHA NEVADA', 30),
-(3, 5, 'Entrada', 'MONTANHA NEVADA', 30),
-(2, 5, 'Entrada', 'MONTANHA NEVADA', 0),
-(3, 1, 'Entrada', 'MONTANHA NEVADA', 0),
-(3, 2, 'Entrada', 'MONTANHA NEVADA', 30),
+(5, 4, 'Entrada', 'MONTANHA NEVADA', 30),
+(5, 3, 'Entrada', 'MONTANHA NEVADA', 30),
+(5, 2, 'Entrada', 'MONTANHA NEVADA', 0),
+(1, 3, 'Entrada', 'MONTANHA NEVADA', 0),
+(2, 3, 'Entrada', 'MONTANHA NEVADA', 30),
 (3, 3, 'Entrada', 'MONTANHA NEVADA', 30),
-(3, 4, 'Entrada', 'MONTANHA NEVADA', 30),
+(4, 3, 'Entrada', 'MONTANHA NEVADA', 30),
 (4, 4, 'Entrada', 'MONTANHA NEVADA', 30),
-(1, 5, 'Entrada', 'MONTANHA NEVADA', 0),
-(7, 6, 'Entrada', 'MONTANHA NEVADA', 30),
+(5, 1, 'Entrada', 'MONTANHA NEVADA', 0),
+(6, 7, 'Entrada', 'MONTANHA NEVADA', 30),
 (7, 7, 'Entrada', 'MONTANHA NEVADA', 30),
-(7, 8, 'Entrada', 'MONTANHA NEVADA', 30),
-(7, 9, 'Entrada', 'MONTANHA NEVADA', 30),
-(4, 9, 'Entrada', 'MONTANHA NEVADA', 30),
-(5, 9, 'Entrada', 'MONTANHA NEVADA', 30),
-(6, 9, 'Entrada', 'MONTANHA NEVADA', 0);
+(8, 7, 'Entrada', 'MONTANHA NEVADA', 30),
+(9, 7, 'Entrada', 'MONTANHA NEVADA', 30),
+(9, 4, 'Entrada', 'MONTANHA NEVADA', 30),
+(9, 5, 'Entrada', 'MONTANHA NEVADA', 30),
+(9, 6, 'Entrada', 'MONTANHA NEVADA', 0);
 -- (1, 1, 'Início', 'AUTO ESTRADA', '50'),
 -- (1, 2, 'Início', 'AUTO ESTRADA', '50'),
 -- (1, 3, 'Início', 'AUTO ESTRADA', '50'),
@@ -112,10 +112,10 @@ INSERT INTO quadrado (pos_x, pos_y, area, mapa, chance_batalha) VALUES
 -- (3, 3, 'Início', 'AUTO ESTRADA', '50');
 
 INSERT INTO quadrado_tipo (pos_x, pos_y, area, mapa, tipo) VALUES
-(9, 5, 'Entrada', 'MONTANHA NEVADA', 'entrada0'),
-(2, 5, 'Entrada', 'MONTANHA NEVADA', 'barreira'),
-(8, 5, 'Entrada', 'MONTANHA NEVADA', 'evento'),
-(1, 5, 'Entrada', 'MONTANHA NEVADA', 'saida0');
+(5, 9,'Entrada', 'MONTANHA NEVADA', 'entrada0'),
+(5, 2,'Entrada', 'MONTANHA NEVADA', 'barreira'),
+(5, 8,'Entrada', 'MONTANHA NEVADA', 'evento'),
+(5, 1,'Entrada', 'MONTANHA NEVADA', 'saida0');
 -- (1, 1, 'Início', 'AUTO ESTRADA', 'entrada'),
 -- (1, 2, 'Início', 'AUTO ESTRADA', 'efeito'),
 -- (2, 2, 'Início', 'AUTO ESTRADA', 'item'),
@@ -124,8 +124,8 @@ INSERT INTO quadrado_tipo (pos_x, pos_y, area, mapa, tipo) VALUES
 -- INSERT INTO quadrado_efeito (pos_x, pos_y, area, mapa, hp_mod, mp_mod) VALUES 
 -- (1, 2, 'Início', 'AUTO ESTRADA', 10, 10);
 
-SELECT add_item_to_quadrado(4, 9, 'Entrada', 'MONTANHA NEVADA', 'Chave da base abandonada', 'chave');
-SELECT add_item_to_quadrado(3, 1, 'Entrada', 'MONTANHA NEVADA', 'Arma-EXP-100', 'consumivel');
+SELECT add_item_to_quadrado(9, 4, 'Entrada', 'MONTANHA NEVADA', 'Chave da base abandonada', 'chave');
+SELECT add_item_to_quadrado(1, 3, 'Entrada', 'MONTANHA NEVADA', 'Arma-EXP-100', 'consumivel');
 SELECT add_item_to_quadrado(4, 4, 'Entrada', 'MONTANHA NEVADA', 'Canhão Fumegante', 'arma');
 
 -- INSERT INTO conecta (pos_x1, pos_y1, area1, mapa1, pos_x2, pos_y2, area2, mapa2) VALUES 
@@ -134,7 +134,7 @@ SELECT add_item_to_quadrado(4, 4, 'Entrada', 'MONTANHA NEVADA', 'Canhão Fumegan
 --INSERT INTO altera (chave, pos_x, pos_y, area, mapa) VALUES 
 --('', '', '', '', '');
 
-SELECT set_destranca(2, 5, 'Entrada', 'MONTANHA NEVADA', 'Chave da base abandonada');
+SELECT set_destranca(5, 2, 'Entrada', 'MONTANHA NEVADA', 'Chave da base abandonada');
 
 --INSERT INTO destranca (chave, pos_x, pos_y, area, mapa) VALUES 
 --('', '', '', '', '');
@@ -205,7 +205,7 @@ BEGIN
         '', TRUE, TRUE) INTO event_id;
     
     INSERT INTO quadrado_evento (pos_x, pos_y, area, mapa, evento) VALUES 
-        (8, 5, 'Entrada', 'MONTANHA NEVADA', event_id);
+        (5, 8, 'Entrada', 'MONTANHA NEVADA', event_id);
 
 END $$;
 

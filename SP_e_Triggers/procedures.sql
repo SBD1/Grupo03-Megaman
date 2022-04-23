@@ -73,8 +73,8 @@ CREATE OR REPLACE FUNCTION check_quad_is_walkable(x INT, y INT, area_ TEXT, mapa
 DECLARE
     num_records INT;
 BEGIN
-    SELECT count(*) INTO num_records FROM quadrado Q WHERE Q.pos_x = x AND Q.pox_y = y AND Q.area = area_ AND Q.mapa = mapa_;
-    IF (num_records == 0) THEN
+    SELECT count(*) INTO num_records FROM quadrado Q WHERE Q.pos_x = x AND Q.pos_y = y AND Q.area = area_ AND Q.mapa = mapa_;
+    IF (num_records = 0) THEN
         RETURN FALSE;
     END IF;
     RETURN TRUE;
@@ -94,6 +94,7 @@ BEGIN
     IF (rslt != 1) THEN
         is_barrier := FALSE;
         is_locked := FALSE;
+        RETURN;
     END IF;
 
     is_barrier := TRUE;
@@ -102,7 +103,7 @@ BEGIN
     SELECT D.chave INTO chave_id FROM destranca D WHERE D.pos_x = x AND D.pos_y = y
         AND D.area = area_ AND D.mapa = mapa_;
 
-    IF (chave_id == -1 OR chave_id IS NULL) THEN
+    IF (chave_id = -1 OR chave_id IS NULL) THEN
         RAISE EXCEPTION 'Não há chave associada a barreira';
     END IF;
 
@@ -130,11 +131,7 @@ BEGIN
         RETURN FALSE;
     END IF;
 
-    SELECT check_quad_barrier(player_, x, y, area_, mapa_) INTO is_barrier, is_barrier_blocked;
-
-    IF (is_barrier = FALSE) THEN
-        RETURN TRUE;
-    END IF;
+    SELECT * FROM check_quad_barrier(player_, x, y, area_, mapa_) INTO is_barrier, is_barrier_blocked;
 
     IF (is_barrier_blocked = TRUE) THEN
         RETURN FALSE;
@@ -142,6 +139,13 @@ BEGIN
 
     RETURN TRUE;
     
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION mark_visited(session_id BIGINT, x INT, y INT, area_ TEXT, mapa_ TEXT) RETURNS void AS $$
+BEGIN
+    UPDATE sessao_quadrado SET visitado=TRUE 
+        WHERE sessao=session_id AND pos_x=x AND pos_y=y AND area=area_ AND mapa=mapa_;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -398,5 +402,31 @@ CREATE OR REPLACE FUNCTION finish_battle_instance(battle_id BIGINT) RETURNS void
 BEGIN
     DELETE FROM instancia_inimigo WHERE batalha_id=battle_id;
     DELETE FROM instancia_batalha WHERE id=battle_id;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION enter_area(session_id BIGINT, mapa_ TEXT, area_ TEXT) RETURNS
+    TABLE (
+        pos_x SMALLINT,
+        pos_y SMALLINT,
+        area TEXT,
+        mapa TEXT
+) as $$
+DECLARE
+    already_created INT;
+BEGIN
+    SELECT count(*) INTO already_created FROM sessao_quadrado SQ WHERE SQ.sessao=session_id AND SQ.mapa=mapa_ AND SQ.area=area_;
+
+    IF (already_created > 0) THEN
+        RETURN QUERY SELECT QT.pos_x, QT.pos_y, QT.area::TEXT, QT.mapa::TEXT FROM quadrado_tipo QT
+            WHERE tipo='entrada0' AND QT.mapa=mapa_ AND QT.area=area_;
+    END IF;
+
+    INSERT INTO sessao_quadrado (sessao, pos_x, pos_y, area, mapa)
+        SELECT session_id, Q.pos_x, Q.pos_y, Q.area, Q.mapa FROM quadrado Q
+        WHERE Q.area=area_ AND Q.mapa=mapa_;
+
+    RETURN QUERY SELECT QT.pos_x, QT.pos_y, QT.area::TEXT, QT.mapa::TEXT FROM quadrado_tipo QT
+        WHERE QT.tipo='entrada0' AND QT.mapa=mapa_ AND QT.area=area_;
 END;
 $$ LANGUAGE plpgsql;
