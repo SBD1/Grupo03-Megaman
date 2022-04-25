@@ -432,7 +432,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION verifica_tipo_item(session_id BIGINT, slot_pos INT,  
-    OUT item_type item.tipo%TYPE, OUT item_id item.id%TYPE ) RETURNS void AS $$
+    OUT item_type text, OUT item_id bigint ) RETURNS void AS $$
 
 DECLARE 
     id_inventario int;
@@ -452,7 +452,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION equipa_arma(session_id BIGINT, item_type item.tipo%TYPE, item_id item.id%TYPE ) RETURNS void AS $$
+CREATE OR REPLACE FUNCTION equipa_arma(session_id BIGINT, item_type text, item_id bigint ) RETURNS void AS $$
 
 DECLARE
     session_player text;
@@ -464,22 +464,18 @@ BEGIN
     SELECT sessao.player INTO session_player FROM sessao
         WHERE sessao.id = session_id;
 
-    SELECT equip.tipo INTO armamento FROM equip, item_id
+    SELECT equip.tipo INTO armamento FROM equip
         WHERE equip.id = item_id;
 
     IF (armamento = 'arma') THEN 
-
         UPDATE player SET arma=item_id WHERE player.nome = session_player;
-
     ELSIF (armamento = 'armadura') THEN
-        equipa_armadura (session_player, item_type, item_id);
-
+       PERFORM equipa_armadura (session_player, item_type, item_id);
     END IF;
-
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION equipa_armadura(session_player TEXT, item_type item.tipo%TYPE, item_id item.id%TYPE ) RETURNS void AS $$
+CREATE OR REPLACE FUNCTION equipa_armadura(session_player TEXT, item_type text, item_id bigint ) RETURNS void AS $$
 
 DECLARE
     armadura player.armadura%TYPE;
