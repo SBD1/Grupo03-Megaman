@@ -639,3 +639,36 @@ BEGIN
 
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION altera_hp_energia(session_id BIGINT, hp_add INT, energia_add INT ) RETURNS TEXT AS $$
+DECLARE 
+    session_player text;
+    inventario_id inventario.id%TYPE;
+    hp_atual_player player.hp_atual%TYPE;
+    energia_atual_player player.energia_atual%TYPE;
+    hp_max smallint;
+    energia_max smallint;
+BEGIN
+
+    SELECT sessao.player INTO session_player FROM sessao
+        WHERE sessao.id = session_id;
+
+    SELECT player.hp_atual, player.energia_atual, player.hp, player.energia INTO hp_atual_player, energia_atual_player, hp_max, energia_max FROM player
+        WHERE player.nome = session_player;
+
+    IF (hp_atual_player + hp_add > hp_max) then
+        hp_add := hp_max - hp_atual_player;
+
+    END IF;
+
+    IF (energia_atual_player + energia_add > energia_max) then
+        energia_add := energia_max - energia_atual_player;
+
+    END IF;
+
+    UPDATE player SET hp_atual = hp_atual + hp_add, energia_atual = energia_atual + energia_add WHERE player.nome = session_player;
+
+    RETURN 'HP e/ou Energia alterada com sucesso!';
+
+END;
+$$ LANGUAGE plpgsql;
