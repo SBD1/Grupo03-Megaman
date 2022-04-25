@@ -68,6 +68,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION create_battle_event(npc_ TEXT, condicao_ TEXT, acionamento_direto_ BOOLEAN,
+    estado_desbloqueio_inicial_ BOOLEAN) RETURNS BIGINT AS $$
+DECLARE
+    event_id evento.id%TYPE;
+BEGIN
+    INSERT INTO evento(tipo, condicao, acionamento_direto, estado_desbloqueio_inicial) VALUES
+        ('b', condicao_, acionamento_direto_, estado_desbloqueio_inicial_) RETURNING id INTO event_id;
+
+    INSERT INTO batalha (id_evento, id_npc) VALUES (event_id, npc_);
+    RETURN event_id;
+END;
+$$ LANGUAGE plpgsql; 
+
 -- Checa se um quadrado é andável
 CREATE OR REPLACE FUNCTION check_quad_is_walkable(x INT, y INT, area_ TEXT, mapa_ TEXT) RETURNS BOOLEAN AS $$
 DECLARE
@@ -177,7 +190,7 @@ CREATE OR REPLACE FUNCTION unblock_event(event_id BIGINT, session_ BIGINT) RETUR
 DECLARE
     rec record;
 BEGIN
-    UPDATE estado_evento SET desbloqueado=TRUE, ativo=TRUE WHERE evento=event_id AND sessao=session_;
+    UPDATE estado_evento SET desbloqueado=TRUE, ativo=FALSE WHERE evento=event_id AND sessao=session_;
     FOR rec in SELECT * FROM event_chain WHERE evento_a = event_id
     LOOP
         UPDATE estado_evento SET desbloqueado=TRUE WHERE sessao=session_ AND evento=rec.evento_b;
@@ -186,7 +199,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- pega um item do chão e coloca no inventário do player
-CREATE OR REPLACE FUNCTION take_item(mapa text, area text, x INT, y INT, session_id BIGINT) RETURNS TEXT AS $$
+CREATE OR REPLACE FUNCTION take_item(mapa_ text, area_ text, x INT, y INT, session_id BIGINT) RETURNS TEXT AS $$
 DECLARE
     item_id BIGINT;
     tipo_item TEXT;
@@ -194,7 +207,7 @@ DECLARE
     session_player text;
     not_null_count INT;
     inventario_id inventario.id%TYPE;
-    rec record;
+    rec RECORD;
 BEGIN
     -- pega o nome do player
     SELECT sessao.player INTO session_player FROM sessao
@@ -202,13 +215,13 @@ BEGIN
 
     -- pega id do item
     SELECT quadrado_item.item INTO item_id FROM quadrado_item 
-        WHERE quadrado_item.mapa = mapa AND quadrado_item.area = area 
+        WHERE quadrado_item.mapa = mapa_ AND quadrado_item.area = area_ 
         AND quadrado_item.pos_x = x AND quadrado_item.pos_y = y;
     
     -- pega o nome do item
     item_name := get_item_name(item_id);
 
-    SELECT item.tipo INTO tipo_item FROM tipo WHERE item.id = item_id;
+    SELECT item.tipo INTO tipo_item FROM item WHERE item.id = item_id;
 
     IF (tipo_item = 'chave') THEN
         INSERT INTO chaveiro (id_chave, id_player) VALUES (item_id, session_player);
@@ -217,13 +230,13 @@ BEGIN
 
     SELECT player.inventario INTO inventario_id FROM player WHERE player.nome = session_player;
 
-    FOR rec IN SELECT * INTO rec FROM slot WHERE id_inventario = inventario_id
+    FOR rec IN SELECT * FROM slot WHERE id_inventario = inventario_id
     LOOP
         IF (rec.item IS NULL) THEN
             UPDATE slot SET item=item_id WHERE id_inventario = rec.id_inventario AND pos = rec.pos;
             UPDATE sessao_quadrado SET item_pego=TRUE
-                WHERE quadrado_item.mapa = mapa AND quadrado_item.area = area 
-                AND quadrado_item.pos_x = x AND quadrado_item.pos_y = y AND quadrado_item.sessao = session_id;
+                WHERE sessao_quadrado.mapa = mapa_ AND sessao_quadrado.area = area_ 
+                AND sessao_quadrado.pos_x = x AND sessao_quadrado.pos_y = y AND sessao_quadrado.sessao = session_id;
             RETURN 'Você pegou o item ' || item_name;
         END IF;
     END LOOP;
@@ -290,7 +303,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- Dropa um item do usuário
-CREATE OR REPLACE FUNCTION drop_item(session_player TEXT, pos_item SMALLINT) RETURNS VOID AS $$
+CREATE OR REPLACE FUNCTION drop_item(session_player TEXT, pos_item SMALLINT) RETURNS void AS $$
 DECLARE
 	invent_id INTEGER;
 
@@ -359,8 +372,8 @@ BEGIN
     END IF;
 
     -- testa se o ataque vai acertar
-    IF (agilidade_player <= evasao_npc) THEN
-        RETURN player_ || 'errou o ataque';
+    IF (agilidade_player < evasao_npc) THEN
+        RETURN player_ || ' errou o ataque';
     END IF;
 
     rand_value := floor(random() * 10+1);
@@ -373,11 +386,11 @@ BEGIN
     END IF;
 
     IF (ataque_player - defesa_npc > 0) THEN
-        UPDATE instancia_inimigo SET hp=ataque_player-defesa_npc
+        UPDATE instancia_inimigo SET hp=hp-(ataque_player-defesa_npc)
             WHERE batalha_id = battle_id AND nome = npc_;
-        RETURN player_ || 'causou' || quote_literal(ataque_player-defesa_npc) || 'de dano a' || npc_;
+        RETURN player_ || ' causou ' || quote_literal(ataque_player-defesa_npc) || ' de dano a ' || npc_;
     ELSE
-        RETURN player_ || 'causou' || quote_literal(0) || 'de dano a' || npc_;
+        RETURN player_ || ' causou ' || quote_literal(0) || ' de dano a ' || npc_;
     END IF;
 
 END;
@@ -423,8 +436,8 @@ BEGIN
     END IF;
 
     -- testa se o ataque vai acertar
-    IF (agilidade_npc <= evasao_player) THEN
-        RETURN npc_ || 'errou o ataque';
+    IF (agilidade_npc < evasao_player) THEN
+        RETURN npc_ || ' errou o ataque';
     END IF;
 
     rand_value := floor(random() * 10+1);
@@ -437,11 +450,11 @@ BEGIN
     END IF;
 
     IF (ataque_npc - defesa_player > 0) THEN
-        UPDATE player SET hp_atual=ataque_npc-defesa_player
+        UPDATE player SET hp_atual=hp_atual-(ataque_npc-defesa_player)
             WHERE nome = player_;
-        RETURN npc_ || 'causou' || quote_literal(ataque_npc-defesa_player) || 'de dano a' || player_;
+        RETURN npc_ || ' causou ' || quote_literal(ataque_npc-defesa_player) || ' de dano a ' || player_;
     ELSE
-        RETURN npc_ || 'causou' || quote_literal(0) || 'de dano a' || player_;
+        RETURN npc_ || ' causou ' || quote_literal(0) || ' de dano a ' || player_;
     END IF;
 
 END;
@@ -482,7 +495,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION verifica_tipo_item(session_id BIGINT, slot_pos INT,  
-    OUT item_type text, OUT item_id bigint ) RETURNS void AS $$
+    OUT item_type text, OUT item_id bigint ) AS $$
 
 DECLARE 
     id_inventario int;
@@ -507,7 +520,7 @@ CREATE OR REPLACE FUNCTION equipa_armamento(session_id BIGINT, item_type text, i
 DECLARE
     session_player text;
     arma player.arma%TYPE;
-    armamento equip.tipo%TYPE;
+    armamento equip.tipo%TYPE DEFAULT 'arma';
 
 BEGIN
 
@@ -520,7 +533,7 @@ BEGIN
     IF (armamento = 'arma') THEN 
         UPDATE player SET arma=item_id WHERE player.nome = session_player;
     ELSIF (armamento = 'armadura') THEN
-       PERFORM equipa_armadura (session_player, item_type, item_id);
+        PERFORM equipa_armadura (session_player, item_type, item_id);
     END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -623,7 +636,7 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION altera_hp_energia(session_id BIGINT, hp INT, energia INT ) RETURNS TEXT AS $$
+CREATE OR REPLACE FUNCTION altera_hp_energia(session_id BIGINT, hp_ INT, energia_ INT ) RETURNS TEXT AS $$
 
 DECLARE 
     session_player text;
@@ -633,7 +646,7 @@ BEGIN
     SELECT sessao.player INTO session_player FROM sessao
         WHERE sessao.id = session_id;
 
-    UPDATE player SET hp_atual = hp_atual + hp, energia_atual = energia_atual + energia WHERE player.nome = session_player;
+    UPDATE player SET hp_atual = hp_atual + hp_, energia_atual = energia_atual + energia_ WHERE player.nome = session_player;
 
     RETURN 'HP e/ou Energia alterada com sucesso!';
 

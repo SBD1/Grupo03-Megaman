@@ -15,7 +15,7 @@ CREATE DOMAIN CHARTYPE
 -- Para HP e Energia
 CREATE DOMAIN PRIM_STAT
 	AS SMALLINT NOT NULL
-	CHECK (VALUE >= 0 AND VALUE < 1000);
+	CHECK (VALUE < 1000);
 
 -- Para ataque, defesa, evasão, etc
 CREATE DOMAIN SEC_STAT
@@ -232,8 +232,10 @@ CREATE TABLE quadrado_item (
 	item BIGINT,
 	
 	CONSTRAINT quadrado_item_pk PRIMARY KEY (pos_x, pos_y, area, mapa),
-	CONSTRAINT quadrado_item_fk FOREIGN KEY (pos_x, pos_y, area, mapa)
-		REFERENCES quadrado (pos_x, pos_y, area, mapa)
+	CONSTRAINT quadrado_item_quad_fk FOREIGN KEY (pos_x, pos_y, area, mapa)
+		REFERENCES quadrado (pos_x, pos_y, area, mapa),
+	CONSTRAINT quadrado_item_item_fk FOREIGN KEY (item)
+		REFERENCES item (id)
 );
 
 CREATE TABLE conecta (

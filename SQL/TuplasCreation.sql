@@ -60,7 +60,7 @@ INSERT INTO player (nome, hp, energia, ataque, defesa, evasao, agilidade, credit
 ('Mega Man', '999', '999', '20', '300', '300', '100', '1000');
 
 INSERT INTO npc (nome, hp, energia, ataque, defesa, evasao, agilidade) VALUES 
-('Utobolus', '300', '300', '100', '100', '30', '30');
+('Utobolus', '25', '50', '5', '6', '10', '10');
 
 INSERT INTO mapa (nome, descricao) VALUES 
 ('MONTANHA NEVADA', 'Uma montanha dominada pelo Chill Penguin');
@@ -114,7 +114,7 @@ INSERT INTO quadrado (pos_x, pos_y, area, mapa, chance_batalha) VALUES
 INSERT INTO quadrado_tipo (pos_x, pos_y, area, mapa, tipo) VALUES
 (5, 9,'Entrada', 'MONTANHA NEVADA', 'entrada0'),
 (5, 2,'Entrada', 'MONTANHA NEVADA', 'barreira'),
-(5, 8,'Entrada', 'MONTANHA NEVADA', 'evento'),
+-- (5, 8,'Entrada', 'MONTANHA NEVADA', 'evento'),
 (5, 1,'Entrada', 'MONTANHA NEVADA', 'saida0');
 -- (1, 1, 'Início', 'AUTO ESTRADA', 'entrada'),
 -- (1, 2, 'Início', 'AUTO ESTRADA', 'efeito'),
@@ -127,6 +127,7 @@ INSERT INTO quadrado_tipo (pos_x, pos_y, area, mapa, tipo) VALUES
 SELECT add_item_to_quadrado(9, 4, 'Entrada', 'MONTANHA NEVADA', 'Chave da base abandonada', 'chave');
 SELECT add_item_to_quadrado(1, 3, 'Entrada', 'MONTANHA NEVADA', 'Arma-EXP-100', 'consumivel');
 SELECT add_item_to_quadrado(4, 4, 'Entrada', 'MONTANHA NEVADA', 'Canhão Fumegante', 'arma');
+SELECT add_item_to_quadrado(5, 6, 'Entrada', 'MONTANHA NEVADA', 'Arma-EXP-100', 'consumivel');
 
 -- INSERT INTO conecta (pos_x1, pos_y1, area1, mapa1, pos_x2, pos_y2, area2, mapa2) VALUES 
 -- ('', '', '', '', '', '', '', '');
@@ -204,9 +205,36 @@ BEGIN
         'O Chill Penguin está criando mísseis na base abandonada.\nCuidado com a área congelada.',
         '', TRUE, TRUE) INTO event_id;
     
+    INSERT INTO quadrado_tipo (pos_x, pos_y, area, mapa, tipo) VALUES
+        (5, 8, 'Entrada', 'MONTANHA NEVADA', 'evento');
+
     INSERT INTO quadrado_evento (pos_x, pos_y, area, mapa, evento) VALUES 
         (5, 8, 'Entrada', 'MONTANHA NEVADA', event_id);
 
+END $$;
+
+DO $$ DECLARE event_id BIGINT;
+BEGIN
+    SELECT create_event_dialog('Dev',
+        'Área passada!\nObrigado por jogar :)',
+        '', TRUE, TRUE) INTO event_id;
+
+    INSERT INTO quadrado_tipo (pos_x, pos_y, area, mapa, tipo) VALUES
+        (5, 2, 'Entrada', 'MONTANHA NEVADA', 'evento');
+
+    INSERT INTO quadrado_evento (pos_x, pos_y, area, mapa, evento) VALUES 
+        (5, 2, 'Entrada', 'MONTANHA NEVADA', event_id);
+END $$;
+
+DO $$ DECLARE event_id BIGINT;
+BEGIN
+    SELECT create_battle_event('Utobolus', '', TRUE, TRUE) INTO event_id;
+
+    INSERT INTO quadrado_tipo (pos_x, pos_y, area, mapa, tipo) VALUES 
+        (3, 3, 'Entrada', 'MONTANHA NEVADA', 'evento');
+
+    INSERT INTO quadrado_evento (pos_x, pos_y, area, mapa, evento) VALUES
+        (3, 3, 'Entrada', 'MONTANHA NEVADA', event_id);
 END $$;
 
 --INSERT INTO evento_chain (evento_a, evento_b) VALUES 

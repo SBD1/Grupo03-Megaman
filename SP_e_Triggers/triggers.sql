@@ -178,7 +178,7 @@ BEGIN
 		NEW.inventario := id_invent;
 		RETURN NEW;
 	ELSIF (TG_OP = 'UPDATE') THEN
-		IF(NEW.id != OLD.id) THEN
+		IF(NEW.inventario != OLD.inventario) THEN
 			RAISE EXCEPTION 'Proibido modificar o id';
 		END IF;
 	ELSIF (TG_OP = 'DELETE') THEN
