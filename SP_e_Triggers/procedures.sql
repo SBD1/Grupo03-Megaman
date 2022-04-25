@@ -617,3 +617,20 @@ BEGIN
         SELECT session_id, id, estado_desbloqueio_inicial, estado_desbloqueio_inicial FROM evento;
 END
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION altera_hp_energia(session_id BIGINT, hp INT, energia INT ) RETURNS TEXT AS $$
+
+DECLARE 
+    session_player text;
+    inventario_id inventario.id%TYPE;
+BEGIN
+
+    SELECT sessao.player INTO session_player FROM sessao
+        WHERE sessao.id = session_id;
+
+    UPDATE player SET hp_atual = hp_atual + hp, energia_atual = energia_atual + energia WHERE player.nome = session_player;
+
+    RETURN 'HP e/ou Energia alterada com sucesso!';
+
+END;
+$$ LANGUAGE plpgsql;
