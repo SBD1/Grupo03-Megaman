@@ -149,7 +149,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Retorna o id de um evento que ainda deve acontecer, se tiver algum
+-- Retorna o id de um evento que ainda deve acontecer no quadrado, se tiver algum
 CREATE OR REPLACE FUNCTION get_active_event(x INT, y INT, area_ TEXT, mapa_ TEXT, sessao_ BIGINT) RETURNS BIGINT AS $$
 DECLARE
     event_id evento.id%TYPE;
@@ -161,7 +161,7 @@ BEGIN
         QE.pos_x = x AND QE.pos_y = y AND QE.area = area_ AND QE.mapa = mapa_
     LOOP
         SELECT ST.desbloqueado, ST.ativo INTO e_desbloqueado, e_ativo
-            FROM estado_quadrado ST
+            FROM estado_evento ST
             WHERE ST.evento = rec.evento AND ST.sessao = sessao_;
         
         IF (e_desbloqueado AND e_ativo) THEN
@@ -180,7 +180,7 @@ BEGIN
     UPDATE estado_evento SET desbloqueado=TRUE, ativo=TRUE WHERE evento=event_id AND sessao=session_;
     FOR rec in SELECT * FROM event_chain WHERE evento_a = event_id
     LOOP
-        UPDATE estado_evento SET desbloquado=TRUE WHERE sessao=session_ AND evento=rec.evento_b;
+        UPDATE estado_evento SET desbloqueado=TRUE WHERE sessao=session_ AND evento=rec.evento_b;
     END LOOP;
 END;
 $$ LANGUAGE plpgsql;
@@ -226,15 +226,60 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION get_item_name(item_id BIGINT) RETURNS TEXT as $$
+DECLARE
+    item_type TEXT;
+    equip_type TEXT;
+    item_name TEXT;
+BEGIN
+    IF (item_id IS NULL) THEN
+        RETURN 'Não equipado';
+    END IF;
+
+    SELECT tipo INTO item_type FROM item WHERE id = item_id;
+
+    IF (item_type = 'consumivel') THEN
+        SELECT nome::TEXT INTO item_name FROM consumivel WHERE id = item_id;
+        RETURN item_name;
+    END IF;
+
+    IF (item_type = 'chave') THEN
+        SELECT nome::TEXT INTO item_name FROM chave WHERE id = item_id;
+        RETURN item_name;
+    END IF;
+
+    IF (item_type = 'equip') THEN
+        SELECT tipo INTO equip_type FROM equip WHERE id = item_id;
+
+        IF (equip_type = 'arma') THEN
+            SELECT nome::TEXT INTO item_name FROM arma WHERE id = item_id;
+            RETURN item_name;
+        END IF;
+
+        IF (equip_type = 'armadura') THEN
+            SELECT nome::TEXT INTO item_name FROM armadura WHERE id = item_id;
+            RETURN item_name;
+        END IF;
+    END IF;
+
+    RAISE EXCEPTION 'ID de item inexistente.';
+END;
+$$ LANGUAGE plpgsql;
 
 -- Busca os itens do usuário na sessão
-CREATE OR REPLACE FUNCTION list_itens(session_player TEXT) RETURNS SETOF slot AS $$
+CREATE OR REPLACE FUNCTION list_itens(session_player TEXT) RETURNS 
+    TABLE (
+        invent_id INT,
+        slot_pos SMALLINT,
+        item_id BIGINT,
+        item_name TEXT
+    ) AS $$
 DECLARE
 	invent_id INTEGER;
 
 BEGIN
 	SELECT player.inventario INTO invent_id FROM player where nome = session_player;
-	RETURN QUERY SELECT * FROM slot WHERE id_inventario = invent_id;
+	RETURN QUERY SELECT slot.id_inventario, slot.pos, item.id, get_item_name(item.id) FROM slot, item WHERE id_inventario = invent_id AND slot.item = item.id;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -520,3 +565,55 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION see_player_status(player_name_ TEXT) RETURNS
+    TABLE (
+        player_name TEXT,
+        hp_max INT,
+        hp_current INT,
+        energy_max INT,
+        energy_current INT,
+        player_ataque INT,
+        player_defesa INT,
+        player_evasao INT,
+        player_agilidade INT,
+        player_creditos INT,
+        player_arma TEXT,
+        player_armadura TEXT
+    ) AS $$
+DECLARE
+    arma_id BIGINT;
+    armadura_id BIGINT;
+BEGIN
+    SELECT player.nome, player.hp, player.hp_atual, player.energia,
+        player.energia_atual, player.ataque, player.defesa, player.evasao,
+        player.agilidade, player.creditos, player.arma, player.armadura
+    INTO player_name, hp_max, hp_current, energy_max, energy_current,
+        player_ataque, player_defesa, player_evasao, player_agilidade, player_creditos,
+        arma_id, armadura_id
+    FROM player WHERE player.nome=player_name_;
+
+    IF (arma_id IS NOT NULL) THEN
+        SELECT arma.ataque + player_ataque, arma.agilidade + player_agilidade INTO player_ataque, player_agilidade
+            FROM arma WHERE arma.id=arma_id;
+    END IF;
+
+    IF (armadura_id IS NOT NULL) THEN
+        SELECT armadura.defesa + player_defesa, armadura.evasao + player_evasao INTO player_defesa, player_evasao
+            FROM armadura WHERE armadura.id=armadura_id;
+    END IF;
+
+    player_arma := get_item_name(arma_id);
+    player_armadura := get_item_name(armadura_id);
+
+    RETURN QUERY SELECT player_name, hp_max, hp_current, energy_max, energy_current, player_ataque,
+        player_defesa, player_evasao, player_agilidade, player_creditos, player_arma, player_armadura;
+
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION copy_events(session_id BIGINT) RETURNS void AS $$
+BEGIN
+    INSERT INTO estado_evento (sessao, evento, desbloqueado, ativo)
+        SELECT session_id, id, estado_desbloqueio_inicial, estado_desbloqueio_inicial FROM evento;
+END
+$$ LANGUAGE plpgsql;

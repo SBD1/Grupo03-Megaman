@@ -1,10 +1,4 @@
-DROP DATABASE megaman;
-
-CREATE DATABASE megaman;
-
-\c megaman
-
-BEGIN;
+-- BEGIN;
 
 CREATE DOMAIN ITEMTYPE 
 	AS VARCHAR(10) NOT NULL
@@ -592,4 +586,4 @@ CREATE TABLE instancia_inimigo (
 --
 --);
 
-COMMIT;
+-- COMMIT;

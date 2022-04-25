@@ -1,4 +1,5 @@
 from locale import currency
+from multiprocessing.connection import wait
 import psycopg2 as pg
 import queries as query
 from postgres_handler import get_cursor, close_all, commit
@@ -36,6 +37,9 @@ def get_str_input(text: str):
     if text != '':
         print(text)
     return input('> ').strip()
+
+def wait_input():
+    input('Digite "enter" para voltar')
 
 def draw_map(cur: 'pg.cursor', session: State):
     current_pos = session.current_pos
@@ -80,6 +84,8 @@ def get_or_create_session(cur: 'pg.cursor') -> State:
             sessao = State()
             sessao.session = session_id[0]
             sessao.player = player
+
+            cur.execute("SELECT copy_events(%s)", (sessao.session,))
 
             return sessao
 
@@ -129,6 +135,62 @@ def move_to(cur: 'pg.cursor',session: State, direction: str):
             (session.session, session.current_pos.x, session.current_pos.y,
              session.current_pos.area, session.current_pos.mapa))
 
+def display_status(cur: 'pg.cursor', session: State, show_equip=True):
+    cur.execute("SELECT * FROM see_player_status(%s);", (session.player.nome,))
+    status = cur.fetchone()
+
+    print(f"-"*20)
+    print(f"{status[0]}")
+    print('')
+    print(f"HP {status[1]}/{status[2]}")
+    print(f"MP {status[3]}/{status[4]}")
+    print(f"ATK {status[5]} DEF {status[6]}")
+    print(f"EVA {status[7]} AGL {status[8]}")
+
+    if show_equip:
+        print('')
+        print(f"arma: {status[10]}")
+        print(f"armadura: {status[11]}")
+
+    print("-"*20)
+
+def inventory_loop(cur: 'pg.cursor', session: State):
+    cur.execute("SELECT * FROM list_itens(%s)", (session.player.nome,))
+    print(cur.fetchall())
+
+def menu(cur: 'pg.cursor', session: State):
+    while True:
+        display_status(cur, session)
+        command = get_str_input("")
+        if command in ["quit", "exit"]:
+            break
+        elif command == "inventory":
+            inventory_loop(cur, session)
+        elif command == "describe weapon":
+            cur.execute("SELECT arma FROM (SELECT player.arma as wid FROM player WHERE nome=%s) as W, arma WHERE arma.id=W.wid;", 
+                (session.player.nome, ))
+            print(cur.fetchone())
+            wait_input()
+        elif command == "unequip weapon":
+            ...
+        elif command == "describe armor":
+            cur.execute("SELECT armadura FROM (SELECT player.armadura as aid FROM player WHERE nome=%s) as A, armadura WHERE armadura.id=A.aid;", 
+                (session.player.nome, ))
+            print(cur.fetchone())
+            
+        elif command == "unequip armor":
+            ...
+        elif command == "help":
+            print("Comandos no menu:")
+            print("'help'\t mostra os comandos disponíveis")
+            print("'exit | quit'\t saí do menu")
+            print("'inventory'\t vai para o menu de inventário")
+            print("'describe weapon'\t mostra informações da arma equipada")
+            print("'unequip weapon'\t desequipa arma")
+            print("'describe armor'\t mostra informações da armadura equipada")
+            print("'unequip armor'\t desequipa armadura")
+            wait_input()
+
 def game_loop(cur: 'pg.cursor', session: State):
     move_to(cur, session, 'stay')
     while True:
@@ -136,17 +198,23 @@ def game_loop(cur: 'pg.cursor', session: State):
         command = get_str_input("")
         if command in ["up", "down", "left", "right"]:
             move_to(cur, session, command)
-        elif command == "items":
-            ...
-        elif command == "status":
-            ...
-        elif command == "look_around":
-            ...
-        elif command == "take item":
+            cur.execute("SELECT * FROM get_active_event(%s, %s, %s, %s, %s)",
+                (session.current_pos.x, session.current_pos.y, session.current_pos.area,
+                 session.current_pos.mapa, session.session))
+            print(cur.fetchall())
+        elif command == "menu":
+            menu(cur, session)
+        elif command == "look around":
             ...
         elif command == "help":
-            ...
-        
+            print("Comandos:")
+            print("'help'\t mostra os comandos disponíveis")
+            print("'up'\t move o personagem pra frente")
+            print("'down'\t move o personagem pra trás")
+            print("'right'\t move o personagem pra direita")
+            print("'left'\t move o personagem pra esquerda")
+            print("'menu'\t mostra os status do personagem e habilita acesso ao inventário e equipamentos")
+            wait_input()
 
 if __name__ == "__main__":
     try:
@@ -155,11 +223,12 @@ if __name__ == "__main__":
         print(session.session, session.player.nome, session.player.inventario)
         commit()
 
+        cur.execute("SELECT * FROM estado_evento;")
+        print(cur.fetchall())
+
         cur.execute("SELECT * FROM enter_area(%s, %s, %s);", (session.session, "MONTANHA NEVADA", "Entrada"))
         start_pos = cur.fetchone()
         session.current_pos = Position(*start_pos)
-        
-        print(start_pos)
 
         game_loop(cur, session)
     

@@ -1,4 +1,4 @@
-BEGIN;
+-- BEGIN;
 
 -- INSERT INTO item (tipo) VALUES 
 -- ('chave'),
@@ -233,4 +233,4 @@ END $$;
 --INSERT INTO comercio (pos_x, pos_y, area, mapa, id_loja) VALUES 
 --('', '', '', '', '');
 
-COMMIT;
+-- COMMIT;
