@@ -186,10 +186,11 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- pega um item do chão e coloca no inventário do player
-CREATE OR REPLACE FUNCTION take_item(mapa text, area text, x INT, y INT, session_id BIGINT) RETURNS void AS $$
+CREATE OR REPLACE FUNCTION take_item(mapa text, area text, x INT, y INT, session_id BIGINT) RETURNS TEXT AS $$
 DECLARE
     item_id BIGINT;
     tipo_item TEXT;
+    item_name TEXT;
     session_player text;
     not_null_count INT;
     inventario_id inventario.id%TYPE;
@@ -203,12 +204,15 @@ BEGIN
     SELECT quadrado_item.item INTO item_id FROM quadrado_item 
         WHERE quadrado_item.mapa = mapa AND quadrado_item.area = area 
         AND quadrado_item.pos_x = x AND quadrado_item.pos_y = y;
+    
+    -- pega o nome do item
+    item_name := get_item_name(item_id);
 
     SELECT item.tipo INTO tipo_item FROM tipo WHERE item.id = item_id;
 
     IF (tipo_item = 'chave') THEN
         INSERT INTO chaveiro (id_chave, id_player) VALUES (item_id, session_player);
-        RETURN;
+        RETURN 'Você pegou a chave ' || item_name;
     END IF;
 
     SELECT player.inventario INTO inventario_id FROM player WHERE player.nome = session_player;
@@ -220,9 +224,10 @@ BEGIN
             UPDATE sessao_quadrado SET item_pego=TRUE
                 WHERE quadrado_item.mapa = mapa AND quadrado_item.area = area 
                 AND quadrado_item.pos_x = x AND quadrado_item.pos_y = y AND quadrado_item.sessao = session_id;
-            RETURN;
+            RETURN 'Você pegou o item ' || item_name;
         END IF;
     END LOOP;
+    RETURN 'O inventário está cheio!';
 END;
 $$ LANGUAGE plpgsql;
 
