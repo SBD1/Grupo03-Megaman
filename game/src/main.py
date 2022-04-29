@@ -380,7 +380,7 @@ def menu(cur: 'pg.cursor', session: State):
         elif command == "help" or command == "h":
             print("Comandos no menu:")
             print("'help' | 'h'\t mostra os comandos disponíveis")
-            print("'exit | quit'\t saí do menu")
+            print("'exit  | quit'\t saí do menu")
             print("'inventory' | 'i'\t vai para o menu de inventário")
             print("'describe weapon'\t mostra informações da arma equipada")
             print("'unequip weapon'\t desequipa arma")
@@ -399,14 +399,19 @@ def game_loop(cur: 'pg.cursor', session: State):
             check_pos_has_item(cur, session)
         elif command == "menu" or command == "m":
             menu(cur, session)
+        elif command in ['quit', 'q']:
+            commit()
+            close_all()
+            return
         elif command == "help" or command == "h":
             print("Comandos:")
             print("'help' | 'h'\t mostra os comandos disponíveis")
-            print("'up' | 'u'\t move o personagem pra frente")
+            print("'up'   | 'u'\t move o personagem pra frente")
             print("'down' | 'd'\t move o personagem pra trás")
-            print("'right' | 'r'\t move o personagem pra direita")
+            print("'right'| 'r'\t move o personagem pra direita")
             print("'left' | 'l'\t move o personagem pra esquerda")
             print("'menu' | 'm'\t mostra os status do personagem e habilita acesso ao inventário e equipamentos")
+            print("'quit' | 'q'\t sai do jogo")
             wait_input()
         commit()
 
