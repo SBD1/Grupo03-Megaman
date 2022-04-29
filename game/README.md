@@ -1,9 +1,15 @@
+### Visão Geral
+
+Como a aplicação é executada na linha de comando, é mais simples executá-la no ambiente local. E por isso a aplicação não fora Containerizada.
+
 ### Requisitos
 
 - python 3.8+
 - pip
 
 ### Ambiente
+
+Primeiramente, configure a conexão com o banco de dados no arquivo `dev.env`. Edite as variáveis e renomeie o arquivo para `.env`.
 
 Recomenda-se usar o venv (virtual env) para rodar a aplicação.
 
@@ -37,7 +43,6 @@ $ python src/main.py
 
 ### Controles
 
-|Controle|Ação|
-|--------|----|
-|Setas   |Movem o personagem |
-|Q       |Saí do jogo        |
+Os controles disponíveis no jogo pode ser vistos ao digitar help.
+
+Em alguns casos o comando não estará disponível, mas o prompt descreverá os comandos disponíveis.

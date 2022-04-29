@@ -57,3 +57,15 @@ Este módulo tem como entregáveis:
 - Os arquivos de [procedures e triggers](https://github.com/SBD1/Grupo03-Megaman/tree/main/SP_e_Triggers);
 
 
+## Entrega Final
+
+Para a entrega final, o jogo (no diretório [game](./game/) foi implementado. As instruções para rodá-lo estão em [game/README.md](./game/README.md).
+
+Antes de rodar o jogo é necesário criar e popular o banco de dados. Com o terminal aberto na pasta raíz deste repositório, entre no psql e use o comando:
+
+```psql
+\i run_all.sql
+```
+
+Obs.: É necessário que não exista nenhum usuário conectado a um banco de dados chamado `megaman` quando rodar o script. O script recria e popula o banco do zero toda vez que é chamado.
+

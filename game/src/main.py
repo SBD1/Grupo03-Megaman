@@ -413,8 +413,11 @@ def game_loop(cur: 'pg.cursor', session: State):
 if __name__ == "__main__":
     try:
         cur = get_cursor()
+
+        print("\n ------- MEGAMAN SBD ---------\n")
+
         session: State = get_or_create_session(cur)
-        print(session.session, session.player.nome, session.player.inventario)
+        # print(session.session, session.player.nome, session.player.inventario)
         commit()
         
         cur.execute("""SELECT QT.pos_x, QT.pos_y, QT.area::TEXT, QT.mapa::TEXT FROM quadrado_tipo QT
