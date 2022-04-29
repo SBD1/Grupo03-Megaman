@@ -56,8 +56,8 @@ INSERT INTO personagem (nome, tipo) VALUES
 ('Velguader', 'npc'),
 ('Aika', 'npc');
 
-INSERT INTO player (nome, hp, energia, ataque, defesa, evasao, agilidade, creditos) VALUES 
-('Mega Man', '999', '999', '20', '300', '300', '100', '1000');
+-- INSERT INTO player (nome, hp, energia, ataque, defesa, evasao, agilidade, creditos) VALUES 
+-- ('Mega Man', '999', '999', '20', '300', '300', '100', '1000');
 
 INSERT INTO npc (nome, hp, energia, ataque, defesa, evasao, agilidade) VALUES 
 ('Utobolus', '25', '50', '5', '6', '10', '10');

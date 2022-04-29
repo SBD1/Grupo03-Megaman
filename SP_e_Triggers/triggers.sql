@@ -226,20 +226,20 @@ CREATE TRIGGER update_slots_inventario_tg
 
 -- loja
 
-CREATE OR REPLACE FUNCTION update_loja() RETURNS TRIGGER AS $update_loja$
+-- CREATE OR REPLACE FUNCTION update_loja() RETURNS TRIGGER AS $update_loja$
 
-BEGIN
-	IF (TG_OP = 'INSERT') THEN
-		INSERT INTO estoque(id_loja, id_item) VALUES (NEW.id_item, 1);
-		RETURN NEW;
-	ELSIF (TG_OP = 'UPDATE') THEN
-        IF (NEW.id != OLD.id) THEN
-            RAISE EXCEPTION 'Proibido modificar o id';
-        END IF;
-    ELSIF (TG_OP = 'DELETE') THEN
-        DELETE FROM item WHERE id = OLD.id;
-        RETURN OLD;
-    END IF;
-    RETURN NEW;
-END;
-$update_player$ LANGUAGE plpgsql;
+-- BEGIN
+-- 	IF (TG_OP = 'INSERT') THEN
+-- 		INSERT INTO estoque(id_loja, id_item) VALUES (NEW.id_item, 1);
+-- 		RETURN NEW;
+-- 	ELSIF (TG_OP = 'UPDATE') THEN
+--         IF (NEW.id != OLD.id) THEN
+--             RAISE EXCEPTION 'Proibido modificar o id';
+--         END IF;
+--     ELSIF (TG_OP = 'DELETE') THEN
+--         DELETE FROM item WHERE id = OLD.id;
+--         RETURN OLD;
+--     END IF;
+--     RETURN NEW;
+-- END;
+-- $update_player$ LANGUAGE plpgsql;
