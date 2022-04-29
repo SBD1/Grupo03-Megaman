@@ -59,7 +59,9 @@ Este módulo tem como entregáveis:
 
 ## Entrega Final
 
-Para a entrega final, o jogo (no diretório [game](./game/) foi implementado. As instruções para rodá-lo estão em [game/README.md](./game/README.md).
+O vídeo de apresentação da entrega final pode ser visto no [youtube](https://youtu.be/k_445DC_LFY).
+
+O jogo (no diretório [game](./game/) foi implementado em python de forma a rodar na linha de comando. As instruções para rodá-lo estão em [game/README.md](./game/README.md).
 
 Antes de rodar o jogo é necesário criar e popular o banco de dados. Com o terminal aberto na pasta raíz deste repositório, entre no psql e use o comando:
 
@@ -68,4 +70,3 @@ Antes de rodar o jogo é necesário criar e popular o banco de dados. Com o term
 ```
 
 Obs.: É necessário que não exista nenhum usuário conectado a um banco de dados chamado `megaman` quando rodar o script. O script recria e popula o banco do zero toda vez que é chamado.
-
