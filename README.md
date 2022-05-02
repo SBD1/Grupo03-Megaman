@@ -59,7 +59,7 @@ Este módulo tem como entregáveis:
 
 ## Entrega Final
 
-O vídeo de apresentação da entrega final pode ser visto no [youtube](https://youtu.be/k_445DC_LFY).
+O vídeo de apresentação da entrega final pode ser visto no [youtube](https://youtu.be/k_445DC_LFY), e também pode ser baixado pelo [Google Drive](https://drive.google.com/file/d/1wQDLgmeq7TBbMX5kDYUv8nVOB9_lp5ug/view?usp=sharing).
 
 O jogo (no diretório [game](./game/) foi implementado em python de forma a rodar na linha de comando. As instruções para rodá-lo estão em [game/README.md](./game/README.md).
 
